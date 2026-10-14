@@ -3301,7 +3301,7 @@ const GPU_GEO = {
   'rtx-5090-fe': {outline:[[0,0],[304,0],[304,137],[0,137]], r:10, fe:{cx:152, arms:[97,207], cap:[87,212], frame:0x1e1d1f, filler:0x18191b, flowBays:[0,1]}, hubD:44, cap:0x55575b, capMetal:true, tipRing:true,
     fans:[[62,68.5,115,7],[242,68.5,115,7]], col:{blade:0x2b2c2e, hub:0x3a3b3e, fins:0x121214, bracket:0x141414},
     conn:{x:196, kind:'16', tilt:true, recess:3}, light:null, xLights:true, bracket:{slots:2, ports:['HDMI','DP','DP','DP'], vents:'none'}},
-  'asus-tuf-rtx-5070-ti-oc': {outline:[[0,5],[5,0],[329,0],[329,140],[0,140]], r:0,
+  'asus-tuf-rtx-5070-ti-oc': {custom:'tuf', outline:[[0,5],[5,0],[329,0],[329,140],[0,140]], r:0,
     fans:[[55,70,95,11],[163,70,96,11],[271,70,95,11]], ring:{lip:6, color:0x3a3b3e}, hubRing:0xd0d0d0, hubD:28, cap:0x151515, tipRing:true, sweep:0.95, pcbEnd:230,
     ledSlits:[[262,9],[262,27],[318,9],[318,27]], ledDots:[296,314],
     col:{shroud:0x2c2d30, blade:0x1c1c1e, hub:0x151515, back:0x3a3b3e, fins:0xa8a29a, bracket:0x5c5d60, skirt:0x2c2d30},
@@ -3340,6 +3340,7 @@ function facePlate(shape, y, depth, mat){ const m = extrude(shape, depth, mat, 3
 function buildGPU(gp, L){
   const G = GPU_GEO[gp.id], g = new THREE.Group();
   if (!G) return buildGPUGeneric(gp, L);
+  if (G.custom === 'tuf') return buildTUF(gp, L, G);   // modelled part by part from the maker's photos (e3b_tuf.js)
   const len = gp.length, th = gp.thickness, Lr = Math.max(...G.outline.map(p => p[0])), sx = len / Lr;
   const top = Math.max(...G.outline.map(p => p[1])), yb = -th + 4;
   const C = G.col, metal = (c, o) => M(c, Object.assign({metalness:0.7, roughness:0.38}, o||{}));
@@ -3487,6 +3488,138 @@ function buildGPU(gp, L){
   g.userData.connWide = tilt;
   g.userData.th = th; g.userData.slots = slots; g.userData.top = top;
   g.add(anchor('gpuconn', conX, -th/2, cz + 8)); g.add(anchor('gpubracket', -6, -bh/2 + 10, 120)); g.add(anchor('gpuFar', -len + 30, 6, top*0.7));
+  return reg('gpu', g, 'gpu');
+}
+
+/* ---------- ASUS TUF Gaming RTX 5070 Ti OC: built part by part from the maker's product photos (no logos or wordmarks) ----------
+   329 x 140 x 62.5 mm. Same axes as the other cards: X along the length from the bracket (0) to the far end, Y from the
+   PCIe edge (0) to the top edge, model x = -X, z = Y, y = thickness (backplate outer face +4.2, fan face -58.5). */
+const TUF_FANS = [[60, 72], [170, 72], [278, 72]], TUF_FAN_D = 100;
+// A rectangle with any part inside a fan opening pushed out to the opening's edge: the silver corner caps and the face bands
+function tufCarved(X0, X1, Y0, Y1, circles){
+  const pts = [], step = 1.2, edge = (ax, ay, bx2, by) => { const n = Math.max(1, Math.ceil(Math.hypot(bx2 - ax, by - ay) / step)); for (let i = 0; i < n; i++) pts.push([ax + (bx2 - ax) * i / n, ay + (by - ay) * i / n]); };
+  edge(X0, Y0, X1, Y0); edge(X1, Y0, X1, Y1); edge(X1, Y1, X0, Y1); edge(X0, Y1, X0, Y0);
+  return pts.map(([x, y]) => { for (const [cx, cy, r] of circles) { const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy); if (d < r) return [cx + dx / (d || 1) * r, cy + dy / (d || 1) * r]; } return [x, y]; })
+    .filter((p, i, a) => !i || Math.hypot(p[0] - a[i-1][0], p[1] - a[i-1][1]) > 0.05);
+}
+const tufShapeXY = pts => { const s = new THREE.Shape(); pts.forEach(([X, Y], i) => i ? s.lineTo(-X, Y) : s.moveTo(-X, Y)); s.lineTo(-pts[0][0], pts[0][1]); return s; };
+const tufPath = pts => { const s = new THREE.Path(); pts.forEach(([X, Y], i) => i ? s.lineTo(-X, Y) : s.moveTo(-X, Y)); s.lineTo(-pts[0][0], pts[0][1]); return s; };
+
+function buildTUF(gp, L, G){
+  const g = new THREE.Group(), len = gp.length, th = gp.thickness, top = 140, yb = -th + 4, C = G.col;
+  const metal = (c, o) => M(c, Object.assign({metalness:0.7, roughness:0.38}, o || {}));
+  const shroudM = metal(0x3a3b3e, {metalness:0.45, roughness:0.52}), bandM = metal(0x2f3033, {metalness:0.4, roughness:0.55});
+  const sideM = metal(0x46484c, {metalness:0.5, roughness:0.5}), silverM = metal(0xbcbec1, {metalness:0.85, roughness:0.3});
+  const backM = metal(0x5c5e62, {metalness:0.55, roughness:0.5}), blackM = M(0x121314, {roughness:0.6, metalness:0.2}), dark = M(0x0b0c0d);
+  const finM = M(0xc2c5c9, {metalness:0.8, roughness:0.32}), pcbM = M(0x15171a), goldM = M(0xd8b45a, {metalness:0.85, roughness:0.3});
+  const fansC = TUF_FANS.map(([X, Y]) => [X, Y, TUF_FAN_D / 2 + 5.5]);
+
+  // ----- PCB with the gold fingers and key gap; it stops short so air passes straight through the far end -----
+  g.add(bx(-232, -2, 0, 1.6, 0, 134, pcbM));
+  g.add(bx(-131, -58.5, 0.2, 1.4, -7.5, 0, goldM), bx(-57, -46, 0.2, 1.4, -7.5, 0, goldM));
+  // ----- heatsink: silver fins across the whole card, reaching up to the backplate where the PCB ends -----
+  { const fins = []; for (let X = 4; X < len - 3; X += 2.0) { const flow = X > 234; fins.push([-X - 0.4, -X, yb + 10.5, flow ? 3.6 : -2, 3.5, top - 3.5]); } g.add(inst(finM, fins)); }
+  for (let i = 0; i < 5; i++) { const p = cyl(3, len - 30, metal(0xd3d6d9, {metalness:0.92, roughness:0.2}), 'x', 12); p.position.set(-len / 2, -th * 0.42, 16 + i * (top - 32) / 4); g.add(p); }
+
+  // ----- backplate: ribbed grey plate, a black cross-shaped retention bracket over the GPU, and a flow-through window with a strut frame -----
+  const flow = [205, 306, 24, 124];
+  { const s = tufShapeXY([[0, 3], [3, 0], [len - 3, 0], [len, 3], [len, top - 3], [len - 3, top], [3, top], [0, top - 3]]);
+    s.holes.push(rrHole(-flow[1], flow[2], -flow[0], flow[3], 5));
+    s.holes.push(rrHole(-126, 55, -104, 77, 2));
+    g.add(facePlate(s, 4.2, 2.4, backM));
+    // raised horizontal ribs from the bracket end to the window
+    const ribs = []; for (let i = 0; i < 9; i++) { const Y = 17 + i * 13.3; if (Y > 53 && Y < 79) { ribs.push([-100, -12, 4.2, 4.9, Y - 1.4, Y + 1.4], [-198, -130, 4.2, 4.9, Y - 1.4, Y + 1.4]); } else ribs.push([-198, -12, 4.2, 4.9, Y - 1.4, Y + 1.4]); }
+    g.add(inst(metal(0x6a6c70, {metalness:0.55, roughness:0.45}), ribs));
+    // the cross: a plus with rounded ends and a square window on the GPU, held by four screws
+    const cr = new THREE.Shape(); [[96, 40], [134, 40], [134, 52], [146, 52], [146, 80], [134, 80], [134, 92], [96, 92], [96, 80], [84, 80], [84, 52], [96, 52]].forEach(([X, Y], i) => i ? cr.lineTo(-X, Y) : cr.moveTo(-X, Y)); cr.lineTo(-96, 40);
+    cr.holes.push(rrHole(-124, 57, -106, 75, 1.5)); g.add(facePlate(cr, 6.6, 2.2, blackM));
+    const sc = []; [[90, 66], [140, 66], [115, 45], [115, 87]].forEach(([X, Y]) => sc.push([-X - 2, -X + 2, 6.6, 7.2, Y - 2, Y + 2])); g.add(inst(silverM, sc));
+    // what shows through the bracket window: the back of the GPU package
+    g.add(bx(-123, -107, 1.6, 2.4, 58, 74, metal(0x7a6a4a, {metalness:0.6, roughness:0.5})));
+    // window frame: a border and struts from each corner and side into a centre hub
+    const [a, b2, c, d] = flow, fx = (a + b2) / 2, fy = (c + d) / 2, fr = new THREE.Shape();
+    [[a - 2, c - 2], [b2 + 2, c - 2], [b2 + 2, d + 2], [a - 2, d + 2]].forEach(([X, Y], i) => i ? fr.lineTo(-X, Y) : fr.moveTo(-X, Y)); fr.lineTo(-(a - 2), c - 2);
+    fr.holes.push(rrHole(-(b2 - 3), c + 3, -(a + 3), d - 3, 4)); g.add(facePlate(fr, 6.0, 1.8, blackM));
+    const strut = (X0, Y0, X1, Y1, w) => { const ln = Math.hypot(X1 - X0, Y1 - Y0), m = bx(-ln / 2, ln / 2, -0.9, 0.9, -w / 2, w / 2, blackM), h2 = new THREE.Group();
+      h2.position.set(-(X0 + X1) / 2, 5.1, (Y0 + Y1) / 2); h2.rotation.y = Math.atan2(Y1 - Y0, X1 - X0); h2.add(m); g.add(h2); };
+    [[a + 3, c + 3], [b2 - 3, c + 3], [a + 3, d - 3], [b2 - 3, d - 3]].forEach(([X, Y]) => strut(X, Y, fx + Math.sign(X - fx) * 10, fy + Math.sign(Y - fy) * 9, 6));
+    strut(a + 3, fy, fx - 13, fy, 5); strut(b2 - 3, fy, fx + 13, fy, 5);
+    const hub = new THREE.Shape(); for (let k = 0; k < 6; k++) { const an = Math.PI / 6 + k * Math.PI / 3, px = -fx + Math.cos(an) * 15, py = fy + Math.sin(an) * 13; k ? hub.lineTo(px, py) : hub.moveTo(px, py); } hub.closePath();
+    hub.holes.push(holeCircle(-fx, fy, 6)); g.add(facePlate(hub, 6.2, 2.0, blackM));
+    // perimeter screws
+    const ps = []; [[12, 8], [12, 132], [200, 8], [200, 132], [318, 8], [318, 132]].forEach(([X, Y]) => ps.push([-X - 1.6, -X + 1.6, 4.2, 4.6, Y - 1.6, Y + 1.6])); g.add(inst(dark, ps)); }
+
+  // ----- fan side -----
+  { // shroud face with the three fan openings
+    const s = tufShapeXY([[0, 5], [5, 0], [len - 4, 0], [len, 4], [len, top - 4], [len - 4, top], [4, top], [0, top - 4]]);
+    TUF_FANS.forEach(([X, Y]) => s.holes.push(holeCircle(-X, Y, TUF_FAN_D / 2 + 1.5)));
+    g.add(facePlate(s, yb + 3, 3, shroudM));
+    // a dark well behind each opening, so only the fins show between the blades
+    TUF_FANS.forEach(([X, Y]) => { const w = new THREE.Shape(); w.absarc(-X, Y, TUF_FAN_D / 2 + 1.5, 0, Math.PI * 2, false); w.holes.push(holeCircle(-X, Y, 16)); g.add(facePlate(w, yb + 10.2, 0.8, M(0x16171a, {roughness:0.7}))); });
+    // raised top and bottom bands between the corner caps, shaped round the fan rings
+    [[60, 270, 121, top - 1.5], [60, 270, 1.5, 21]].forEach(([X0, X1, Y0, Y1]) => g.add(facePlate(tufShapeXY(tufCarved(X0, X1, Y0, Y1, fansC)), yb - 0.1, 1.3, bandM)));
+    // fan rings: a dark raised lip with a thin bright bevel
+    TUF_FANS.forEach(([X, Y]) => {
+      const lip = new THREE.Mesh(new THREE.RingGeometry(TUF_FAN_D / 2 + 1.5, TUF_FAN_D / 2 + 4.6, 64), metal(0x26272a, {metalness:0.35, roughness:0.5, side:THREE.DoubleSide})); lip.rotation.x = Math.PI / 2; lip.position.set(-X, yb - 1.2, Y); g.add(lip);
+      const bev = new THREE.Mesh(new THREE.RingGeometry(TUF_FAN_D / 2 + 4.6, TUF_FAN_D / 2 + 5.5, 64), metal(0x6b6d71, {metalness:0.8, roughness:0.3, side:THREE.DoubleSide})); bev.rotation.x = Math.PI / 2; bev.position.set(-X, yb - 1.25, Y); g.add(bev); });
+    // silver corner caps, each cut round its fan, with a screw in the outer corner
+    [[3, 64, 106, top - 2, 0, [10, 131]], [3, 62, 2, 36, 0, [10, 9]], [266, len - 3, 108, top - 2, 2, [319, 131]], [268, len - 3, 2, 34, 2, [319, 9]]].forEach(([X0, X1, Y0, Y1, fi, sp]) => {
+      g.add(facePlate(tufShapeXY(tufCarved(X0, X1, Y0, Y1, [fansC[fi]])), yb - 0.2, 1.6, silverM));
+      const rim = cyl(2.6, 0.8, M(0x1a1b1d), 'y', 16); rim.position.set(-sp[0], yb - 1.9, sp[1]); g.add(rim);
+      const hd = cyl(1.7, 0.6, metal(0xd6d8da, {metalness:0.9, roughness:0.25}), 'y', 12); hd.position.set(-sp[0], yb - 2.2, sp[1]); g.add(hd); });
+    // fine grooves in the top band, the hazard dashes by the fingers, and four small amber lights in the far top corner
+    const gr = []; for (let i = 0; i < 4; i++) gr.push([-(152 + i * 3.2) - 0.6, -(152 + i * 3.2) + 0.6, yb - 1.5, yb - 1.3, 126, 135]); g.add(inst(dark, gr));
+    const wm = M(0xd9dadc, {roughness:0.5});
+    for (let i = 0; i < 5; i++) { const m = bx(-1.2, 1.2, -0.15, 0.15, -3.2, 3.2, wm), h2 = new THREE.Group(); h2.position.set(-(84 + i * 5), yb - 1.55, 11); h2.rotation.y = -0.5; h2.add(m); g.add(h2); }
+    const am = new THREE.MeshStandardMaterial({color:0xffe9a8, emissive:0xf2b632, emissiveIntensity:0.55, roughness:0.4});
+    for (let i = 0; i < 4; i++) { const m = bx(-(296 + i * 4.2) - 0.8, -(296 + i * 4.2) + 0.8, yb - 1.7, yb - 1.4, 129, 136, am); m.userData.lit = true; g.add(m); } }
+
+  // ----- fans: eleven swept blades joined by an outer ring, dark hub with a bright ring -----
+  TUF_FANS.forEach(([X, Y]) => {
+    const look = Object.assign({}, FAN_LOOKS.gpu, {hubD:34 * 120 / TUF_FAN_D, blade:Object.assign({}, FAN_LOOKS.gpu.blade, {sweep:0.95})});
+    const fo = fan(TUF_FAN_D, DIR.py, {frameless:true, thick:10, color:0x1c1e21, blade:0x131416, blades:11, hub:0x1b1c1e, cap:0x18191b, look, tipRing:true}); fo.position.set(-X, yb + 4, Y); g.add(fo);
+    const hr = new THREE.Mesh(new THREE.RingGeometry(16.5, 18.2, 40), metal(0xc9cbce, {metalness:0.9, roughness:0.25, side:THREE.DoubleSide})); hr.rotation.x = Math.PI / 2; hr.position.set(-X, yb - 1.4, Y); g.add(hr); });
+
+  // ----- top edge: a grey frame over the full thickness, with slanted windows onto the fins and a bay for the power socket -----
+  const frame = (z0, holes) => { const s = new THREE.Shape(); s.moveTo(-1, yb + 0.5); s.lineTo(-len + 0.5, yb + 0.5); s.lineTo(-len + 0.5, -2); s.lineTo(-1, -2); s.lineTo(-1, yb + 0.5);
+    holes.forEach(h => s.holes.push(tufPath(h))); const m = extrude(s, 2, sideM); m.position.z = z0; g.add(m); };
+  const T = y => yb + y;   // depth from the fan face
+  frame(top - 2, [
+    [[14, T(12)], [92, T(12)], [80, T(46)], [14, T(46)]],
+    [[100, T(12)], [180, T(12)], [180, T(46)], [112, T(46)]],
+    [[194, T(22)], [224, T(22)], [224, T(42)], [194, T(42)]],
+    [[234, T(12)], [300, T(12)], [288, T(46)], [234, T(46)]],
+    [[308, T(14)], [322, T(14)], [322, T(44)], [308, T(44)]]]);
+  // bottom edge: the same frame on the board side, kept clear of the fingers
+  frame(0, [[[150, T(14)], [228, T(14)], [216, T(44)], [150, T(44)]], [[240, T(14)], [312, T(14)], [312, T(44)], [252, T(44)]]]);
+  // white dashes on the top frame
+  { const wm = M(0xd9dadc, {roughness:0.5}); for (let i = 0; i < 4; i++) { const m = bx(-1.1, 1.1, -3.5, 3.5, -0.15, 0.15, wm), h2 = new THREE.Group(); h2.position.set(-(40 + i * 5), T(52), top + 0.05); h2.rotation.z = 0.5; h2.add(m); g.add(h2); } }
+
+  // ----- far end: a grey cap with slanted vent slots on the fan half -----
+  { const s = new THREE.Shape(); s.moveTo(1, yb + 0.5); s.lineTo(top - 1, yb + 0.5); s.lineTo(top - 1, 3); s.lineTo(1, 3); s.lineTo(1, yb + 0.5);
+    for (let i = 0; i < 9; i++) { const Y = 22 + i * 11; s.holes.push((() => { const p = new THREE.Path(); p.moveTo(Y, T(8)); p.lineTo(Y + 4, T(8)); p.lineTo(Y + 12, T(34)); p.lineTo(Y + 8, T(34)); p.lineTo(Y, T(8)); return p; })()); }
+    const m = extrude(s, 2, sideM); m.rotation.y = -Math.PI / 2; m.position.x = -len + 2; g.add(m); }
+
+  // ----- bracket: brushed stainless, three DisplayPorts and an HDMI in the first slot, the second HDMI and vents in the next -----
+  const B = G.bracket, slots = Math.max(B.slots, Math.ceil(gp.slots)), bh = B.slots * 20.32, brM = metal(0xb4b5b8, {metalness:0.75, roughness:0.38});
+  g.add(bx(-1.2, 0, -bh + 10, 10, -14, 112, brM)); g.add(bx(-14, 0, 8.6, 10, 112, 120, brM));
+  { const outs = [], hole = []; let z = 8;
+    const port = (k, row) => { const w = k === 'HDMI' ? 15 : 16; outs.push([0, 4, -8.2 - row * 20.32, -2.4 - row * 20.32, z, z + w]); hole.push([3.9, 4.2, -7.2 - row * 20.32, -3.4 - row * 20.32, z + 1, z + w - 1]); z += w + 4; };
+    B.ports.forEach(k => port(k, 0)); z = 8; (B.second || []).forEach(k => port(k, 1));
+    g.add(inst(M(0x2a2e33, {metalness:0.6}), outs)); g.add(inst(dark, hole));
+    const v = []; for (let k2 = 0; k2 < 6; k2++) v.push([-0.1, 0.2, -20.32 - 7, -20.32 + 7, 30 + k2 * 13, 38 + k2 * 13]);
+    for (let k2 = 0; k2 < 4; k2++) v.push([-0.1, 0.2, -6, -4.5, 26 + k2 * 20, 34 + k2 * 20]);
+    g.add(inst(dark, v)); }
+
+  // ----- 12V-2x6 socket in its bay on the top edge -----
+  const conX = -G.conn.x, rec = G.conn.recess || 0, ctop = top - rec, w = 22;
+  g.add(bx(conX - w / 2, conX + w / 2, -th / 2 - 5, -th / 2 + 5, ctop - 10, ctop, M(0x111214)));
+  const pins = []; for (let r = 0; r < 2; r++) for (let k2 = 0; k2 < 6; k2++) pins.push([conX - w / 2 + 2 + k2 * (w - 4) / 6, conX - w / 2 + 4 + k2 * (w - 4) / 6, -th / 2 - 3 + r * 4, -th / 2 - 1 + r * 4, ctop, ctop + 0.2]);
+  g.add(inst(goldM, pins));
+  g.userData.conn = new THREE.Vector3(conX, -th / 2, ctop);
+  g.userData.connDir = new THREE.Vector3(0, 0, 1); g.userData.connWide = false;
+  g.userData.th = th; g.userData.slots = slots; g.userData.top = top;
+  g.add(anchor('gpuconn', conX, -th / 2, top + 8)); g.add(anchor('gpubracket', -6, -bh / 2 + 10, 120)); g.add(anchor('gpuFar', -len + 30, 6, top * 0.7));
   return reg('gpu', g, 'gpu');
 }
 
@@ -4961,9 +5094,13 @@ function ropeTaut(G, r, mask){
 const ROPE_SUB = 3;
 function ropeMesh(R){
   const M = (R.n - 1) * ROPE_SUB + 1, rs = R.rs, geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(M * rs * 3), 3));
-  geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(M * rs * 3), 3));
-  const idx = []; for (let i = 0; i < M - 1; i++) for (let k = 0; k < rs; k++) { const a = i * rs + k, b = i * rs + (k + 1) % rs, c = a + rs, d = b + rs; idx.push(a, c, b, b, c, d); }
+  // the tube's rings, then a solid cap on each end (ring copies with flat normals around a centre point)
+  const V = M * rs + 2 * (rs + 1);
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(V * 3), 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(V * 3), 3));
+  const idx = []; for (let i = 0; i < M - 1; i++) for (let k = 0; k < rs; k++) { const a = i * rs + k, b = i * rs + (k + 1) % rs, c = a + rs, d = b + rs; idx.push(a, b, c, b, d, c); }   // wound so the outside faces out
+  const s0 = M * rs, s1 = s0 + rs + 1;
+  for (let k = 0; k < rs; k++) { const k1 = (k + 1) % rs; idx.push(s0 + rs, s0 + k1, s0 + k, s1 + rs, s1 + k, s1 + k1); }
   geo.setIndex(idx);
   const old = R.mesh.geometry; R.mesh.geometry = geo; old.dispose();
   R.mesh.frustumCulled = false; R.mesh.userData.noClash = true;
@@ -4992,6 +5129,12 @@ function ropeWrite(R){
     for (let k = 0; k < rs; k++) { const an = k / rs * Math.PI * 2, c = Math.cos(an), s = Math.sin(an), ox = c * nx + s * bx, oy = c * ny + s * by, oz = c * nz + s * bz, v = (i * rs + k) * 3;
       na[v] = ox; na[v+1] = oy; na[v+2] = oz; pa[v] = P[i*3] + ox * r; pa[v+1] = P[i*3+1] + oy * r; pa[v+2] = P[i*3+2] + oz * r; }
   }
+  // end caps: copy the first and last rings, normals along the run
+  [[0, -1, R.M * rs], [R.M - 1, 1, R.M * rs + rs + 1]].forEach(([i, sg, base]) => {
+    let tx = T[i*3], ty = T[i*3+1], tz = T[i*3+2]; const tl = Math.sqrt(tx*tx + ty*ty + tz*tz) || 1; tx *= sg / tl; ty *= sg / tl; tz *= sg / tl;
+    for (let k = 0; k <= rs; k++) { const v = (base + k) * 3, src = (i * rs + (k < rs ? k : 0)) * 3;
+      if (k < rs) { pa[v] = pa[src]; pa[v+1] = pa[src+1]; pa[v+2] = pa[src+2]; } else { pa[v] = P[i*3]; pa[v+1] = P[i*3+1]; pa[v+2] = P[i*3+2]; }
+      na[v] = tx; na[v+1] = ty; na[v+2] = tz; } });
   pos.needsUpdate = true; nor.needsUpdate = true;
 }
 
@@ -5274,7 +5417,9 @@ function setCamMode(m, fromUser){
     const f = new THREE.Vector3(); camera.getWorldDirection(f);
     controls.target.copy(camera.position).addScaledVector(f, Math.max(220, Math.min(900, camera.position.length() * 0.6)));
     controls.enabled = true; controls.update();
-    announce('Orbit camera');
+    // back in Orbit: return to the starting view (the current step's view in the guided build)
+    if (mode === 'guide' && typeof frameStep === 'function') frameStep(); else resetView();
+    announce('Orbit camera, back to the starting view');
   }
   invalidate(false);
 }

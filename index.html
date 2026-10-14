@@ -6288,34 +6288,70 @@ const PORT_NEAR = 520;     // mm from the camera to the board centre
 function renderPortSpots(){
   const el = $('#portspots'); portSpots = (scn.board && scn.board.userData.ports) || [];
   el.innerHTML = portSpots.map((q, i) => `<button type="button" class="pspot" id="ps${i}" aria-label="${esc(q.name)}. ${esc(q.desc)}"><span class="pd" aria-hidden="true"></span><span class="pl" aria-hidden="true"><b>${esc(q.name)}</b>${esc(q.desc)}</span></button>`).join('');
-  portsVisible = false;
+  portsVisible = false; if (typeof occ !== 'undefined') { occ.at = -1e9; occ.cam.set(Infinity, 0, 0); }
 }
 $('#portspots').addEventListener('click', e => { const b = e.target.closest('.pspot'); if (!b) return; const was = b.classList.contains('on');
   document.querySelectorAll('#portspots .pspot.on').forEach(x => x.classList.remove('on')); if (!was) b.classList.add('on'); });
-const _ppv = new THREE.Vector3(), _pc = new THREE.Vector3(), occCam = new THREE.Vector3(), _ray = new THREE.Raycaster();
-let occAt = 0;
-function updatePortOcclusion(){
-  const blockers = ['cooler', 'pump', 'radiator', 'gpu', 'ram', 'psu', 'fans-stock', 'fans-extra', 'cable-24', 'cable-eps', 'cable-gpu', 'cable-front', 'cable-sata', 'm2'].map(k => scn[k]).filter(o => o && isShown(o));
-  portSpots.forEach(q => { q.a.getWorldPosition(_ppv); const d = _ppv.clone().sub(camera.position), len = d.length();
-    _ray.set(camera.position, d.normalize()); _ray.far = len - 4;
-    q.hidden = blockers.length ? _ray.intersectObjects(blockers, true).some(h => h.object.visible && !h.object.userData.decal && !(h.object.material && h.object.material.transparent)) : false; });
+const _ppv = new THREE.Vector3(), _pc = new THREE.Vector3(), _pd = new THREE.Vector3(), _ray = new THREE.Raycaster(), _hits = [];
+// Marker occlusion (PERF-FIX): cheap sphere tests first, first-hit exit, and the work spread over frames.
+const OCC_KEYS = ['cooler', 'pump', 'radiator', 'gpu', 'ram', 'psu', 'fans-stock', 'fans-extra', 'cable-24', 'cable-eps', 'cable-gpu', 'cable-front', 'cable-sata', 'm2'];
+var occ = {meshes: [], i: 0, left: 0, at: -1e9, cam: new THREE.Vector3(Infinity, 0, 0)};
+function occMeshes(){
+  const out = [];
+  OCC_KEYS.map(k => scn[k]).filter(o => o && isShown(o)).forEach(root => {
+    root.updateMatrixWorld(true);
+    (function walk(o){
+      if (!o.visible) return;
+      if (o.isMesh && !o.userData.decal) {
+        const m = o.material, clear = Array.isArray(m) ? m.every(x => x.transparent) : (m && m.transparent);
+        if (!clear) {
+          let s = null;
+          let bx = null;
+          if (!o.isInstancedMesh) { const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (!g.boundingBox) g.computeBoundingBox(); s = g.boundingSphere.clone().applyMatrix4(o.matrixWorld); bx = g.boundingBox.clone().applyMatrix4(o.matrixWorld); }
+          out.push([o, s, bx]);
+        }
+      }
+      o.children.forEach(walk);
+    })(root);
+  });
+  return out;
 }
+function portBlocked(q, meshes){
+  q.a.getWorldPosition(_ppv); _pd.copy(_ppv).sub(camera.position); const len = _pd.length();
+  _ray.set(camera.position, _pd.normalize()); _ray.near = 0; _ray.far = len - 4;
+  for (let k = 0; k < meshes.length; k++) {
+    const o = meshes[k][0], s = meshes[k][1], bx = meshes[k][2];
+    if (s && (!_ray.ray.intersectsSphere(s) || camera.position.distanceTo(s.center) - s.radius > _ray.far)) continue;
+    if (bx && !_ray.ray.intersectsBox(bx)) continue;
+    _hits.length = 0; o.raycast(_ray, _hits);
+    if (_hits.length) return true;
+  }
+  return false;
+}
+function updatePortOcclusion(){ const ms = occMeshes(); portSpots.forEach(q => { q.hidden = portBlocked(q, ms); }); }
 function placePortSpots(r, blocked){
   const el = $('#portspots');
   const allowed = mode === 'config' && panels.markers && scn.board && isShown(scn.board) && !(pickOpen && activeCat === 'fans');
   let near = false;
   if (allowed && scn.anchors && scn.anchors.socket) { const F = scn.board.userData.F; scn.anchors.socket.getWorldPosition(_pc);
     near = camera.position.distanceTo(_pc) < Math.hypot(F.w, F.h) * (soloKey === 'board' ? 2.7 : 1.6); }
-  // markers behind a cooler, card or memory hide (checked a few times a second, not every frame)
-  const now = performance.now();
-  if (near && (now - occAt > 220 || !camera.position.equals(occCam))) { occAt = now; occCam.copy(camera.position); updatePortOcclusion(); }
+  // markers behind a cooler, card or memory hide; the check runs a few markers at a time within a small time budget
+  if (near && portSpots.length) {
+    const now = performance.now();
+    if (!camera.position.equals(occ.cam) && now - occ.at > 120) { occ.cam.copy(camera.position); occ.at = now; occ.meshes = occMeshes(); occ.left = portSpots.length; }
+    if (occ.left > 0) {
+      const t0 = performance.now(), n = portSpots.length;
+      while (occ.left > 0 && performance.now() - t0 < 2.5) { const q = portSpots[occ.i % n]; occ.i = (occ.i + 1) % n; q.hidden = portBlocked(q, occ.meshes); occ.left--; }
+      if (occ.left > 0) dirty = true;
+    }
+  }
   if (near !== portsVisible) { portsVisible = near; el.classList.toggle('on', near); if (near) announce('Zoomed in: connector labels are showing on the board'); }
   portSpots.forEach((q, i) => {
     const b = document.getElementById('ps' + i); if (!b) return;
-    if (!near) { b.style.display = 'none'; return; }
+    if (!near) { if (b.style.display !== 'none') b.style.display = 'none'; return; }
     q.a.getWorldPosition(_ppv); const p = toScreen(_ppv, r);
-    if (!p || q.hidden || p[0] < 8 || p[0] > r.width - 8 || p[1] < curInsets.t + 10 || blocked(p)) { b.style.display = 'none'; return; }
-    b.style.display = ''; b.style.left = p[0] + 'px'; b.style.top = p[1] + 'px';
+    if (!p || q.hidden || p[0] < 8 || p[0] > r.width - 8 || p[1] < curInsets.t + 10 || blocked(p)) { if (b.style.display !== 'none') b.style.display = 'none'; return; }
+    if (b.style.display) b.style.display = ''; b.style.left = p[0] + 'px'; b.style.top = p[1] + 'px';
   });
 }
 

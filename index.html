@@ -4542,27 +4542,37 @@ function pumpDirOf(s){ return s.pumpDir || autoPumpDir(s); }
 // board heatsink; then try the other sides in turn.
 function placePump(F, k){
   const pref = autoPumpDir(sel), order = sel.pumpDir ? [sel.pumpDir] : [pref].concat(['front', 'top', 'bottom', 'rear'].filter(d => d !== pref));
-  const others = leafBoxes(scn.ram).concat(leafBoxes(scn.board, o => o.userData.clashTag === 'hs'), leafBoxes(scn.gpu));
+  const grp = (list, g, est) => list.map(l => Object.assign(l, {grp:g, est:!!est}));   // board heatsink heights are estimated, so the fit check only warns about them
+  const others = grp(leafBoxes(scn.ram), 'ram').concat(grp(leafBoxes(scn.board, o => o.userData.clashTag === 'hs'), 'hs', true), grp(leafBoxes(scn.gpu), 'gpu'));
   // the case fans that will be fitted (built later, so taken from their slots)
   const cs = byId.cases[sel.case], rpos = resolvedRadPos(sel);
   Object.entries(sel.fanCfg || {}).forEach(([m, f]) => { if (m === rpos || f.model === 'none') return; const on = f.slots || [];
     fanSlots(m, (f.slots || []).length || 1, f.size, L, cs).forEach(sl => { if (!on[sl.i]) return; const ad = airDir(m, 'in'), h = f.size / 2;
       const e = new THREE.Vector3(Math.abs(ad.x) > 0.5 ? 13 : h, Math.abs(ad.y) > 0.5 ? 13 : h, Math.abs(ad.z) > 0.5 ? 13 : h), c0 = new THREE.Vector3(...sl.p);
-      others.push({b:new THREE.Box3(c0.clone().sub(e), c0.clone().add(e))}); }); });
+      others.push({b:new THREE.Box3(c0.clone().sub(e), c0.clone().add(e)), grp:'fan' + others.length}); }); });
   // the radiator and its fans, from where they will mount
   const rp = resolvedRadPos(sel), P = rp && radPlacement(rp, k, byId.cases[sel.case], L);
   if (P) { const b = new THREE.Box3(new THREE.Vector3(P.box[0], P.box[2], P.box[4]), new THREE.Vector3(P.box[1], P.box[3], P.box[5])), d = P.fanDir.clone();
     const into = rp === 'top' ? d : d;   // fans sit on the inner face of the radiator, toward the case interior
     const inner = b.clone(); ['x','y','z'].forEach(a => { if (Math.abs(into[a]) > 0.5) { const n = L.geo.fans[rp].in[0] === '+' ? 1 : -1; if (n > 0) inner.max[a] += 26; else inner.min[a] -= 26; } });
-    others.push({b:inner}); }
+    others.push({b:inner, grp:'rad'}); }
   let pm = null, best = null;
   for (const d of order) {
     pm = buildPump(F, k); orientPump(pm, F, d); pm.userData.dir = d; assembly.add(pm);
     if (sel.pumpDir) { best = pm; break; }
-    const mine = leafBoxes(pm); let hit = 0;
-    mine.forEach(a => others.forEach(b => { const o = overlapDepth(a.b, b.b); if (o.every(x => x > CLASH_TOL)) hit += o[0] * o[1] * o[2]; }));   // overlap volume, mm³
+    const mine = leafBoxes(pm), uA = new Map(), uB = new Map(); let hit = 0, fail = 0;
+    mine.forEach(a => others.forEach(b => { const o = overlapDepth(a.b, b.b); if (!o.every(x => x > CLASH_TOL)) return;
+      hit += o[0] * o[1] * o[2];   // overlap volume, mm³
+      let m = uA.get(a); if (!m) uA.set(a, m = {}); (m[b.grp] || (m[b.grp] = new THREE.Box3())).union(b.b); (uB.get(b) || uB.set(b, new THREE.Box3()).get(b)).union(a.b); }));
+    /* would the fit check call this a failure? 3 mm or more into a part, measured the way detectClashes does (each piece against
+       the union of the other part's pieces it overlaps). The check only warns about board heatsinks, whose heights are estimated;
+       here a heatsink counts as a failure once the overlap passes what that estimate could explain (3 mm more). A turn that
+       only warns beats one that fails; between equals, the smaller overlap wins. */
+    const lim = g => g === 'hs' ? 6 : 3;
+    uA.forEach((m, a) => Object.entries(m).forEach(([g, u]) => { if (Math.min(...overlapDepth(a.b, u)) >= lim(g)) fail = 1; }));
+    uB.forEach((u, b) => { if (Math.min(...overlapDepth(b.b, u)) >= lim(b.grp)) fail = 1; });
     assembly.remove(pm);
-    if (!best || hit < best.userData.hit) { if (best) disposeTree(best); pm.userData.hit = hit; best = pm; } else disposeTree(pm);
+    if (!best || fail < best.userData.fail || (fail === best.userData.fail && hit < best.userData.hit)) { if (best) disposeTree(best); pm.userData.hit = hit; pm.userData.fail = fail; best = pm; } else disposeTree(pm);
     if (!hit) break;
   }
   scn.pump = best; return best;

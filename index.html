@@ -217,6 +217,8 @@ legend{padding:0}
 .opt-main .why{grid-column:2}
 .opt-main .facts{grid-column:1 / -1;margin-top:10px}
 .fanrow{padding-left:12px} .fanrow .opt-main{cursor:default}
+.fanrow .price{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.fanrow .opt-tools{margin-top:8px}
 .thumb{flex:none;width:64px;height:64px;border-radius:12px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);
   background:radial-gradient(90% 90% at 50% 35%, var(--thumb-1) 0%, var(--thumb-2) 100%);color:var(--muted)}
 .thumb img{width:64px;height:64px;display:block}
@@ -437,6 +439,33 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .btnrow{display:flex;flex-wrap:wrap;gap:6px}
 .btn.small{min-height:36px;padding:0 12px;font-size:.82rem}
 .mount{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:var(--r-md);background:var(--raised);border:1px solid var(--line)}
+/* fan picker: the airflow line, compact mount rows, then the fan cards */
+.fansum{display:flex;flex-direction:column;gap:8px}
+.fansum .hint{margin:0}
+.fs-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px}
+.fs-n{font-size:.88rem;font-weight:600}
+.fsec{margin:14px 0 6px;font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mounts{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-md);background:var(--raised);overflow:hidden}
+.mrow{padding:10px 12px;margin:0;border:0;border-top:1px solid var(--line);min-width:0}
+.mgrid{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:start}
+.mrow:first-child{border-top:0}
+.mrow.note .mgrid{align-items:center}
+.mrow p{margin:0}
+.mrow .mt{font-weight:700;font-size:.9rem}
+.mrow .why{font-size:.78rem;color:var(--muted)}
+.mthumb{width:44px;height:44px;border-radius:10px}
+.mthumb img{width:44px;height:44px}
+.mthumb.thumb-none svg{width:22px;height:22px}
+.mbody{display:flex;flex-direction:column;gap:7px;min-width:0}
+.mbody .mhead{align-items:baseline}
+.mbody select{width:100%;min-height:38px;border-radius:10px;border:1px solid var(--line-strong);background:var(--glass-strong);padding:0 10px;font-size:.86rem}
+.mctl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.mctl:empty{display:none}
+.mctl .slotbtn{min-height:34px;padding:0 10px 0 8px;font-size:.82rem}
+.seg.dir{gap:4px;flex-wrap:nowrap}
+.seg.dir label{min-height:34px;padding:4px 10px;font-size:.82rem}
+.seg.dir input{position:absolute;opacity:0;width:1px;height:1px}
+.seg.dir label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .mset{display:flex;flex-direction:column;gap:10px}
 .mset > legend.mhead{margin:0 0 2px;float:none}
 .mhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;padding:0}
@@ -473,6 +502,24 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .hot:hover .lab,.hot:focus-visible .lab,.hot.on .lab{max-width:180px}
 .hot.on{border-color:var(--accent)}
 .hot.clash{padding-right:13px;border-color:var(--bad);z-index:2}
+.hot.empty{border-style:dashed}
+.hot[aria-expanded="true"]{padding-right:0!important}
+.hot[aria-expanded="true"] .lab{max-width:0!important}   /* its card names it */
+.hot.empty .dot svg{width:16px;height:16px;color:var(--accent)}
+/* the card a marker opens */
+.hotcard{position:absolute;z-index:5;width:min(300px, calc(100% - 20px));padding:12px;border-radius:16px;display:flex;flex-direction:column;gap:10px;background:var(--glass-strong)}
+.hotcard[hidden]{display:none}
+.hc-top{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:start}
+.hc-top .thumb{width:56px;height:56px}
+.hc-txt p{margin:0}
+.hc-txt .eyebrow{margin-bottom:2px}
+.hc-n{font-weight:600;line-height:1.3}
+.hc-p{font-size:.84rem;color:var(--muted);margin-top:2px!important}
+.hc-x{width:32px;height:32px;margin:-4px -4px 0 0}
+.hc-fit .chip{white-space:normal}
+.hc-btns{display:flex;gap:8px}
+.hc-btns .btn{flex:1;justify-content:center}
+.hc-btns .btn svg{width:16px;height:16px}
 .hot.clash .lab{max-width:260px;color:var(--bad-ink, var(--bad))}
 .fslot{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;
   border:2px dashed var(--accent);background:var(--glass-strong);color:var(--accent);box-shadow:0 6px 16px -6px rgba(0,0,0,.4)}
@@ -630,6 +677,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   <p id="scenedesc" class="sr-only"></p>
   <div class="loading" id="loading">Loading 3D view…</div>
   <div class="overlay" id="hotspots" role="group" aria-label="Parts you can change, placed on the 3D build"></div>
+  <div class="hotcard glass" id="hotcard" role="dialog" aria-labelledby="hcTitle" hidden></div>
   <div class="overlay" id="fanspots" role="group" aria-label="Fan positions on the case"></div>
   <div class="overlay" id="portspots" role="group" aria-label="Connectors on the motherboard. Zoom in close to the board to show them"></div>
   <div class="solobar glass pill" id="soloBar" role="region" aria-label="Part view" hidden><span id="soloText"></span><button type="button" class="btn small primary" id="soloAdd" hidden>Add to build</button><button type="button" class="btn small" id="soloExit">Show the whole build</button></div>
@@ -1674,6 +1722,7 @@ function refreshUI(){
 function announce(msg){ const l = $('#live'); l.textContent = ''; setTimeout(()=>{ l.textContent = msg; }, 30); }
 
 function openPicker(cat, focusIt){
+  if (typeof closeHotCard === 'function') closeHotCard(false);
   if (preview) { dropPreview(); setSolo(null); }
   const was = pickOpen; activeCat = cat; pickOpen = true; app.classList.add('pick-open'); app.classList.toggle('pick-fans', cat === 'fans'); $('#panelPick').hidden = false;
   if (isMobile()) setSheet(true, 'a');
@@ -1775,20 +1824,93 @@ $('#catnav').addEventListener('click', e => { const b = e.target.closest('[data-
   if (preview) endPreview(false); else { setSolo(null); const nb = document.querySelector(`#catnav [data-solo="${b.dataset.solo}"]`); if (nb) nb.focus(); } }, true);
 function renderHotspots(checks){
   const el = $('#hotspots'); renderPortSpots();
-  if (soloKey) { el.innerHTML = ''; hotspots = []; $('#fanspots').innerHTML = ''; if (sceneReady) invalidate(false); return; }
+  if (soloKey) { if (hotCard) closeHotCard(false); el.innerHTML = ''; hotspots = []; $('#fanspots').innerHTML = ''; if (sceneReady) invalidate(false); return; }
   renderFanSpots();
   // markers hide when switched off in View, and while the fan picker shows its own + / − markers
-  if (mode !== 'config' || !panels.markers || (pickOpen && activeCat === 'fans')) { el.innerHTML = ''; hotspots = []; if (sceneReady) invalidate(false); return; }
+  if (mode !== 'config' || !panels.markers || (pickOpen && activeCat === 'fans')) { if (hotCard) closeHotCard(false); el.innerHTML = ''; hotspots = []; if (sceneReady) invalidate(false); return; }
   checks = checks || evaluate(sel);
-  hotspots = HOT_CATS.filter(cat => isPicked(sel, cat)).map(cat => ({cat, a:hotspotAnchor(cat)})).filter(h => h.a);
+  hotspots = HOT_CATS.filter(cat => isPicked(sel, cat) || (cat !== 'case' && cat !== 'fans' && isPicked(sel, 'case'))).map(cat => ({cat, a:hotspotAnchor(cat), empty:!isPicked(sel, cat)})).filter(h => h.a);
   clashes.forEach(c => c.anchor && hotspots.push({cat:c.cats.find(k => k !== 'case') || 'case', a:c.anchor, clash:c}));
   if (sceneReady) invalidate(false);
   el.innerHTML = hotspots.map((h,i) => { if (h.clash) { const k = h.clash, mm = Math.max(1, Math.round(k.depth)), txt = `${k.names[0][0].toUpperCase() + k.names[0].slice(1)} hits ${k.names[1]} · ${mm} mm`;
-      return `<button type="button" class="hot fail clash" id="hot${i}" data-cat="${h.cat}" aria-label="Clash: ${esc(txt)}. Change the ${esc(CATS.find(x=>x.key===h.cat).label)}"><span class="dot" aria-hidden="true"><i></i></span><span class="lab" aria-hidden="true">${esc(txt)}</span></button>`; }
-    const st = catStatus(checks, h.cat), c = CATS.find(x=>x.key===h.cat);
-    return `<button type="button" class="hot ${st}${pickOpen && activeCat===h.cat ? ' on':''}" id="hot${i}" data-cat="${h.cat}" aria-label="${esc(c.label)}: ${esc(part(h.cat).name)}. ${STATUS_WORD[st]}. Change"><span class="dot" aria-hidden="true"><i></i></span><span class="lab" aria-hidden="true">${esc(c.label)}</span></button>`; }).join('');
+      return `<button type="button" class="hot fail clash" id="hot${i}" data-cat="${h.cat}" data-clash="1" aria-haspopup="dialog" aria-label="Clash: ${esc(txt)}. ${esc(CATS.find(x=>x.key===h.cat).label)}"><span class="dot" aria-hidden="true"><i></i></span><span class="lab" aria-hidden="true">${esc(txt)}</span></button>`; }
+    const c = CATS.find(x=>x.key===h.cat), open = hotCard && hotCard.cat === h.cat && !hotCard.clash;
+    if (h.empty) return `<button type="button" class="hot empty" id="hot${i}" data-cat="${h.cat}" aria-haspopup="dialog" aria-expanded="${open}" aria-label="${esc(c.label)}: not picked yet"><span class="dot" aria-hidden="true">${PLUS_ICON}</span><span class="lab" aria-hidden="true">Add ${esc(catLabel(h.cat))}</span></button>`;
+    const st = catStatus(checks, h.cat);
+    return `<button type="button" class="hot ${st}${pickOpen && activeCat===h.cat ? ' on':''}" id="hot${i}" data-cat="${h.cat}" aria-haspopup="dialog" aria-expanded="${open}" aria-label="${esc(c.label)}: ${esc(part(h.cat).name)}. ${STATUS_WORD[st]}"><span class="dot" aria-hidden="true"><i></i></span><span class="lab" aria-hidden="true">${esc(c.label)}</span></button>`; }).join('');
 }
-$('#hotspots').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) openPicker(b.dataset.cat, true); });
+/* ---------- the card a marker opens: the part's picture, name and price, with Change and Remove (Add when it isn't picked) ---------- */
+let hotCard = null;   // {cat, clash}: the open card
+const PART_LABEL = k => CATS.find(c => c.key === k).label;
+// what the fans add to the build's cost: fans beyond the ones that came with the case
+function fansCost(s){ let t = 0, n = 0; Object.values(s.fanCfg || {}).forEach(f => { if (!f || f.model === 'stock' || f.model === 'none') return; const k = (f.slots || []).filter(Boolean).length, I = partInfo('fans', f.model); n += k; if (I && I.msrpUSD != null) t += k * I.msrpUSD; }); return {t, n}; }
+function mainFanModel(s){ const c = {}; Object.values(s.fanCfg || {}).forEach(f => { if (f && f.model !== 'none') c[f.model] = (c[f.model] || 0) + (f.slots || []).filter(Boolean).length; });
+  return Object.keys(c).sort((a, b) => c[b] - c[a])[0] || null; }
+function hotCardHTML(cat, clash){
+  const label = PART_LABEL(cat), picked = isPicked(sel, cat);
+  if (!picked) return `<div class="hc-top"><span class="thumb thumb-none" aria-hidden="true">${catIcon(cat)}</span><div class="hc-txt"><p class="eyebrow" id="hcTitle">${esc(label)}</p><p class="hc-n">Not picked yet</p></div>${HC_CLOSE}</div>
+    <div class="hc-btns"><button type="button" class="btn small primary" data-hc="add">${PLUS_ICON}Add ${esc(catLabel(cat))}</button></div>`;
+  const checks = evaluate(sel), st = catStatus(checks, cat), bad = checks.filter(c => c.cats.includes(cat) && c.status === st && st !== 'pass')[0];
+  let thumb, name = part(cat).name, price;
+  if (cat === 'fans') { const m = mainFanModel(sel), fc = fansCost(sel); thumb = m && m !== 'stock' ? thumbHTML('fans', m) : thumbHTML('fans', '-');
+    price = fc.n ? `${money(fc.t)} for ${fc.n} added fan${fc.n > 1 ? 's' : ''}` : 'Came with the case'; }
+  else { const I = partInfo(cat, sel[cat]); thumb = thumbHTML(cat, sel[cat]); price = I && I.msrpUSD != null ? `${money(I.msrpUSD)} launch price` : 'Price not published'; }
+  const note = clash ? chip('fail', clash) : chip(st, st === 'pass' ? 'Fits' : bad ? bad.title : STATUS_WORD[st]);
+  return `<div class="hc-top">${thumb}<div class="hc-txt"><p class="eyebrow" id="hcTitle">${esc(label)}</p><p class="hc-n">${esc(name)}</p><p class="hc-p">${esc(price)}</p></div>${HC_CLOSE}</div>
+    <div class="hc-fit">${note}</div>
+    <div class="hc-btns"><button type="button" class="btn small primary" data-hc="change">Change</button><button type="button" class="btn small" data-hc="remove">Remove</button></div>`;
+}
+const HC_CLOSE = '<button type="button" class="closebtn hc-x" data-hc="close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>';
+function hotEl(){ return hotCard && document.querySelector(`#hotspots .hot[data-cat="${hotCard.cat}"]${hotCard.clash ? '[data-clash]' : ':not([data-clash])'}`); }
+function openHotCard(cat, clash){
+  hotCard = {cat, clash: clash || null};
+  const card = $('#hotcard'); card.innerHTML = hotCardHTML(cat, clash); card.hidden = false;
+  document.querySelectorAll('#hotspots .hot').forEach(b => b.setAttribute('aria-expanded', b === hotEl()));
+  placeHotCard(); const f = card.querySelector('[data-hc="change"], [data-hc="add"]'); if (f) f.focus({preventScroll:true});
+}
+function closeHotCard(refocus){
+  if (!hotCard) return; const b = hotEl(); hotCard = null; $('#hotcard').hidden = true;
+  document.querySelectorAll('#hotspots .hot').forEach(x => x.setAttribute('aria-expanded', 'false'));
+  if (refocus && b) b.focus({preventScroll:true});
+}
+// beside its marker, kept inside the view; it follows the marker as the view turns
+function placeHotCard(){
+  const card = $('#hotcard'); if (!hotCard || card.hidden) return;
+  const b = hotEl(), st = stageEl.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight, m = 10;
+  let left, top;
+  if (b && b.style.display !== 'none' && b.style.left) {   // beside the marker (its label included), on whichever side has room
+    const r = b.getBoundingClientRect(), x0 = r.left - st.left, x1 = r.right - st.left, y = r.top - st.top + r.height / 2;
+    if (isMobile()) {   // phones: under the marker (over it when there's no room), so it never covers the marker
+      left = (x0 + x1) / 2 - w / 2; top = r.bottom - st.top + 10;
+      if (top + h > st.height - m - curInsets.b) top = r.top - st.top - 10 - h;
+    } else { left = x1 + 10; top = y - h / 2; if (left + w > st.width - m - curInsets.r) left = x0 - 10 - w; }
+  } else {   // the marker is out of sight just now: the middle of the free part of the view
+    left = curInsets.l + (st.width - curInsets.l - curInsets.r - w) / 2; top = curInsets.t + (st.height - curInsets.t - curInsets.b - h) / 2;
+  }
+  left = Math.max(m + curInsets.l, Math.min(st.width - w - m, left));
+  top = Math.max(curInsets.t + m, Math.min(st.height - h - m - (isMobile() ? curInsets.b : 0), top));
+  card.style.left = left + 'px'; card.style.top = top + 'px';
+}
+// a part comes out of the build at once; the fans come out of every mount (a radiator keeps its own fans)
+function removePart(cat){
+  const label = PART_LABEL(cat);
+  if (cat === 'fans') Object.values(sel.fanCfg || {}).forEach(f => { if (!f) return; f.model = 'none'; setSlots(f, (f.slots || []).map(() => false)); });
+  else { sel.none = [...new Set((sel.none || []).concat(cat))]; normalizeEmpty(sel); }
+  if (preview) preview = null;
+  closeHotCard(false); if (pickOpen && activeCat === cat) closePicker(false);
+  rebuildScene(); refreshUI(); updateSceneDesc();
+  announce(cat === 'fans' ? 'Case fans removed' : `${label} removed from your build`);
+  const nb = document.querySelector(`#hotspots .hot[data-cat="${cat}"]`) || document.querySelector(`#catnav button[data-cat="${cat}"]`); if (nb) nb.focus({preventScroll:true});
+}
+$('#hotspots').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return;
+  const cat = b.dataset.cat, clash = b.dataset.clash ? (b.querySelector('.lab') || {}).textContent : null;
+  if (hotCard && hotCard.cat === cat && !!hotCard.clash === !!clash) closeHotCard(true); else openHotCard(cat, clash); });
+$('#hotcard').addEventListener('click', e => { const b = e.target.closest('[data-hc]'); if (!b || !hotCard) return; const cat = hotCard.cat, act = b.dataset.hc;
+  if (act === 'close') { closeHotCard(true); return; }
+  if (act === 'remove') { removePart(cat); return; }
+  closeHotCard(false); openPicker(cat, true); });
+document.addEventListener('pointerdown', e => { if (hotCard && !e.target.closest('#hotcard') && !e.target.closest('#hotspots .hot')) closeHotCard(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && hotCard) { e.preventDefault(); e.stopPropagation(); closeHotCard(true); } }, true);
 
 /* ---------- background (BG-PATCH): studio light, studio dark, or a desk setup in a warm or dark room ---------- */
 const BACKGROUNDS = [
@@ -1867,35 +1989,40 @@ function pressureChip(t){
   if (!t.outN) return chip('warn', 'No exhaust');
   return t.inC >= t.outC ? chip('pass', 'Positive pressure') : chip('info', 'Negative pressure');
 }
+// One list: the airflow in a line, each mount in a compact row (its fan, positions and direction), then the fans you can
+// use, as cards like every other part (picture, price, View, All specs). Airflow numbers live in All specs.
+function fanUse(s){ const n = {}; const pos = resolvedRadPos(s), vb = vgBlocks(s);
+  Object.entries(s.fanCfg || {}).forEach(([m, f]) => { if (!f || f.model === 'none' || m === pos || vb.includes(m)) return; const k = (f.slots || []).filter(Boolean).length; if (k) n[f.model] = (n[f.model] || 0) + k; }); return n; }
 function renderFanOptions(){
   if (!isPicked(sel, 'case')) { $('#options').innerHTML = `<p class="hint">Case fans go in the case's fan mounts, so they come after the case.</p><div><button type="button" class="btn small primary" data-pickcase>Choose a case</button></div>`; return; }
-  const c = byId.cases[sel.case], k = byId.coolers[sel.cooler], mo = mountOptions(c), t = airTally(sel);
+  const c = byId.cases[sel.case], k = byId.coolers[sel.cooler], mo = mountOptions(c), t = airTally(sel), use = fanUse(sel);
   const fanChecks = evaluate(sel).filter(ch => ch.cats.includes('fans') && (ch.status === 'warn' || ch.status === 'fail'));
-  let html = `<p class="hint">${isMobile() ? 'Tap + on the case to add a fan and − to take one out, or use the positions below.' : 'Click + on the case to add a fan and − to take one out, or use the positions below.'}</p>
-    <div class="aircard"><div class="summary">${pressureChip(t)}</div>
+  let html = `<div class="fansum"><div class="fs-line">${pressureChip(t)}<span class="fs-n"><span class="mono">${t.inN}</span> intake · <span class="mono">${t.outN}</span> exhaust</span></div>
     ${fanChecks.map(ch => `<p class="check ${ch.status}">${ICON[ch.status]}<span class="t"><span class="sr-only">${STATUS_WORD[ch.status]}: </span>${esc(ch.title)}</span><span class="d">${esc(ch.detail)}</span></p>`).join('')}
-    <p class="airline"><span class="mono">${t.inN}</span> intake ≈ <span class="mono">${t.inC}</span> CFM · <span class="mono">${t.outN}</span> exhaust ≈ <span class="mono">${t.outC}</span> CFM</p>
-    <div class="btnrow"><button type="button" class="btn small" data-fan="recommended">Use recommended directions</button><button type="button" class="btn small" data-fan="stock">Reset to stock</button></div>
-    <div class="frow"><label for="fanAll">Same fan everywhere</label><div class="inline"><select id="fanAll">${Object.values(FAN_MODELS).map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select><button type="button" class="btn small" data-fan="all">Apply</button></div></div></div>`;
+    <p class="hint">${isMobile() ? 'Tap' : 'Click'} + or − on the case to add or take out a fan.</p>
+    <div class="btnrow"><button type="button" class="btn small" data-fan="recommended">Recommended directions</button><button type="button" class="btn small" data-fan="stock">Reset to stock</button></div></div>
+    <h3 class="fsec">Mounts</h3><div class="mounts">`;
   Object.entries(mo).forEach(([m, opts]) => {
-    const f = sel.fanCfg[m]; const fits = opts.map(o => `${o.n}× ${o.size} mm`).join(' or ');
-    if (vgBlocks(sel).includes(m)) { const V = vgOf(c); html += `<div class="mount"><div class="mhead"><h3>${MOUNT_NAME[m]}</h3><span class="why">fits ${fits}</span></div><p class="why">${m === 'bottom' ? `The vertical graphics card's ${V.how === 'kit' ? 'kit' : 'riser'} sits on the shroud here, so these fans come out.` : `The vertical graphics card takes this spot${V.how === 'built-in' ? ' (it shares the vertical slot area)' : ''}, so no fan fits.`} Switch the card back to horizontal to use it.</p></div>`; return; }
-    if (t.radPos === m) { html += `<div class="mount"><div class="mhead"><h3>${MOUNT_NAME[m]}</h3><span class="why">fits ${fits}</span></div><p class="why">Holds the ${k.radiatorSize} mm radiator and its ${t.radFans} fans, set to ${m === 'top' ? 'exhaust' : 'intake'}.</p></div>`; return; }
+    const f = sel.fanCfg[m], fits = opts.map(o => `${o.n}× ${o.size}`).join(' or ') + ' mm';
+    const note = txt => { html += `<div class="mrow note"><div class="mgrid"><span class="thumb thumb-none mthumb" aria-hidden="true">${catIcon(m === t.radPos ? 'cooler' : 'gpu')}</span><div><p class="mt">${MOUNT_NAME[m]}</p><p class="why">${txt}</p></div></div></div>`; };
+    if (vgBlocks(sel).includes(m)) { const V = vgOf(c); note(m === 'bottom' ? `The upright graphics card's ${V.how === 'kit' ? 'kit' : 'riser'} sits here, so no fans.` : 'The upright graphics card takes this spot.'); return; }
+    if (t.radPos === m) { note(`The ${k.radiatorSize} mm radiator and its ${t.radFans} fans, ${m === 'top' ? 'exhaust' : 'intake'}.`); return; }
     const val = f.model === 'none' ? 'none' : `${f.model}|${f.size}`;
     const model = FAN_MODELS[f.model], colors = model ? model.colorOptions : null;
-    const slots = f.slots || [], names = slotNames(m, slots.length, c);
-    const posHtml = `<div class="frow"><span class="flab" id="fpos-${m}">Positions <span class="why">${f.model === 'none' ? 'none filled' : `${f.count} of ${slots.length} filled`}</span></span>
-      <div class="slots" role="group" aria-labelledby="fpos-${m}">${slots.map((on, i) => `<button type="button" class="slotbtn" data-slot="${i}" aria-pressed="${f.model !== 'none' && on}"><span class="sq" aria-hidden="true"></span>${names[i] || i+1}</button>`).join('')}</div></div>`;
-    html += `<div class="mount"><fieldset class="mset" data-mount="${m}"><legend class="mhead"><span class="mt">${MOUNT_NAME[m]}</span><span class="why">fits ${fits}</span></legend>
-      <div class="frow"><label for="fm-${m}">Fan</label><select id="fm-${m}" data-k="model">${fanChoiceList(c, m).map(([v,tx]) => `<option value="${v}" ${v===val?'selected':''}>${esc(tx)}</option>`).join('')}</select></div>
-      ${posHtml}
-      ${f.model !== 'none' && f.count ? `${colors && colors.length > 1 ? `<div class="frow"><label for="fco-${m}">Color</label><select id="fco-${m}" data-k="color">${colors.map(cl => `<option value="${esc(cl)}" ${cl===(f.color||colors[0])?'selected':''}>${esc(cl)}</option>`).join('')}</select></div>` : ''}
-        <div class="seg" role="radiogroup" aria-label="${MOUNT_NAME[m]} fan direction"><label><input type="radio" name="dir-${m}" id="dir-${m}-in" value="in" ${f.dir==='in'?'checked':''}>Intake <span aria-hidden="true">→ in</span></label><label><input type="radio" name="dir-${m}" id="dir-${m}-out" value="out" ${f.dir==='out'?'checked':''}>Exhaust <span aria-hidden="true">← out</span></label></div>` : ''}
-    </fieldset></div>`;
+    const slots = f.slots || [], names = slotNames(m, slots.length, c), on = f.model !== 'none' && f.count;
+    const th = f.model === 'none' ? `<span class="thumb thumb-none mthumb" aria-hidden="true">${catIcon('fans')}</span>` : f.model === 'stock' ? `<span class="thumb thumb-none mthumb" aria-hidden="true">${catIcon('fans')}</span>` : thumbHTML('fans', f.model).replace('class="thumb"', 'class="thumb mthumb"');
+    html += `<fieldset class="mset mrow" data-mount="${m}"><legend class="sr-only">${MOUNT_NAME[m]} fans</legend><div class="mgrid">
+      ${th}<div class="mbody">
+        <div class="mhead"><span class="mt" aria-hidden="true">${MOUNT_NAME[m]}</span><span class="why">${f.model === 'none' ? 'No fans' : `${f.count} of ${slots.length}`} · fits ${fits}</span></div>
+        <select id="fm-${m}" data-k="model" aria-label="${MOUNT_NAME[m]} fan">${fanChoiceList(c, m).map(([v,tx]) => `<option value="${v}" ${v===val?'selected':''}>${esc(tx)}</option>`).join('')}</select>
+        ${on && colors && colors.length > 1 ? `<select id="fco-${m}" data-k="color" aria-label="${MOUNT_NAME[m]} fan color">${colors.map(cl => `<option value="${esc(cl)}" ${cl===(f.color||colors[0])?'selected':''}>${esc(cl)}</option>`).join('')}</select>` : ''}
+        <div class="mctl">${slots.length > 1 || f.model === 'none' ? `<div class="slots" role="group" aria-label="${MOUNT_NAME[m]} fan positions">${slots.map((o, i) => `<button type="button" class="slotbtn" data-slot="${i}" aria-pressed="${f.model !== 'none' && o}"><span class="sq" aria-hidden="true"></span>${names[i] || i+1}</button>`).join('')}</div>` : ''}
+          ${on ? `<div class="seg dir" role="radiogroup" aria-label="${MOUNT_NAME[m]} fan direction"><label><input type="radio" name="dir-${m}" id="dir-${m}-in" value="in" ${f.dir==='in'?'checked':''}>Intake</label><label><input type="radio" name="dir-${m}" id="dir-${m}-out" value="out" ${f.dir==='out'?'checked':''}>Exhaust</label></div>` : ''}</div>
+      </div></div></fieldset>`;
   });
-  html += `<div class="section"><h3>About these fans</h3><p class="hint">View shows a fan fitted to every mount that takes it, before you change anything.</p><div class="fanrows">${Object.values(FAN_MODELS).map(f => { const idb = `o-${f.id}`, z = f.sizes[0];
-    const facts = partInfo('fans', f.id) ? factsHTML('fans', f, idb) : `<span class="facts" id="${idb}-f"><span class="fact"><span class="k">Airflow</span><span class="v">${z.cfm} CFM</span></span><span class="fact"><span class="k">Max speed</span><span class="v">${z.maxRpm} RPM</span></span></span>`;
-    return `<div class="opt fanrow"><div class="opt-main">${thumbHTML('fans', f.id)}<span class="opt-body"><span class="n" id="${idb}-n">${esc(f.name)}</span>${f.whyPopular ? `<span class="why">${esc(f.whyPopular)}</span>` : ''}${facts}</span></div>${rowTools('fans', Object.assign({source:z.source}, f), idb, null)}</div>`; }).join('')}</div></div>`;
+  html += `</div><h3 class="fsec">Fans</h3><div class="fanrows">${Object.values(FAN_MODELS).map(f => { const idb = `o-${f.id}`, n = use[f.id] || 0;
+    return `<div class="opt fanrow"><div class="opt-main">${thumbHTML('fans', f.id)}<span class="opt-body"><span class="n" id="${idb}-n">${esc(f.name)}</span><span class="row" id="${idb}-s">${n ? chip('pass', `In ${n} spot${n > 1 ? 's' : ''}`) : '<span class="why">Not in your build</span>'}</span>${factsHTML('fans', f, idb)}</span></div>
+      ${rowTools('fans', Object.assign({source:f.sizes[0].source}, f), idb, null, `<button type="button" class="btn small" data-fan="all" data-model="${esc(f.id)}" aria-describedby="${idb}-n">Use everywhere</button>`)}</div>`; }).join('')}</div>`;
   $('#options').innerHTML = html; restorePanels();
 }
 function fanChanged(focusId, msg){
@@ -1938,11 +2065,11 @@ $('#options').addEventListener('click', e => {
   if (b.dataset.fan === 'stock') { sel.fanCfg = stockFanCfg(sel.case); fanChanged(null, 'Fans reset to the case defaults'); }
   else if (b.dataset.fan === 'recommended') { Object.keys(sel.fanCfg).forEach(m => sel.fanCfg[m].dir = defaultDir(m)); fanChanged(null, 'Front, side and bottom fans set to intake; top and rear set to exhaust'); }
   else if (b.dataset.fan === 'all') {
-    const id = $('#fanAll').value, model = FAN_MODELS[id];
+    const id = b.dataset.model, model = FAN_MODELS[id];
     Object.entries(mo).forEach(([m, opts]) => { const fit = model.sizes.map(z => z.mm).find(sz => opts.some(o => o.size === sz)); if (!fit) return;
       sel.fanCfg[m] = fillSlots(c, m, {model:id, size:fit, dir:defaultDir(m), color:null}, maxCount(c, m, fit)); });
     lastFanModel = id;
-    fanChanged('fanAll', `${model.name} fitted to every mount that takes it`);
+    fanChanged(null, `${model.name} fitted to every mount that takes it`); const nb = $(`#options [data-fan="all"][data-model="${CSS.escape(id)}"]`); if (nb) nb.focus({preventScroll:true}); return;
   }
   b.blur();
 });
@@ -2008,12 +2135,12 @@ const dl = rows => `<dl class="kv">${rows.map(([k, v]) => `<div><dt>${esc(k)}</d
 function factsHTML(cat, p, idBase){
   const I = partInfo(cat, p.id);
   const price = `<span class="price"><span class="k">Launch price</span><span class="v">${I && I.msrpUSD != null ? money(I.msrpUSD) : 'Not published'}</span>${I && I.priceDate ? `<span class="d">${esc(I.priceDate)}</span>` : ''}</span>`;
-  const facts = I ? I.info.slice(0, 3) : [['Type', cat === 'storage' ? `${p.type} · ${p.capacity}` : specLine(cat, p)]];
+  const facts = cat === 'fans' ? [] : I ? I.info.slice(0, 3) : [['Type', cat === 'storage' ? `${p.type} · ${p.capacity}` : specLine(cat, p)]];
   return `<span class="facts" id="${idBase}-f">${price}${facts.map(([k, v]) => `<span class="fact"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></span>`).join('')}</span>`;
 }
 // View, More specs and Dimensions sit outside the radio's label, so opening them never changes the selection
-function rowTools(cat, p, idb, fit){
-  const I = partInfo(cat, p.id), more = I ? I.info.slice(3) : [], dims = dimsList(cat, p);
+function rowTools(cat, p, idb, fit, extraBtn){
+  const I = partInfo(cat, p.id), more = I ? (cat === 'fans' ? I.info.concat(dimsList(cat, p)) : I.info.slice(3)) : [], dims = cat === 'fans' ? [] : dimsList(cat, p);
   const boxHTML = I && I.inBox && I.inBox.length ? `<h4 class="ph">In the box</h4><ul class="inbox">${I.inBox.map(t => `<li>${esc(t)}</li>`).join('')}</ul>${I.keep ? `<p class="keep"><b>Keep:</b> ${esc(I.keep)}</p>` : ''}` : '';
   const bsrc = (I && I.boxSources) || [];
   if (fit && fit.metric) dims.push(['In this build', fit.metric]);
@@ -2022,12 +2149,13 @@ function rowTools(cat, p, idb, fit){
   const psrc = (I && I.priceSources) || [];
   const srcAll = srcHTML + bsrc.map(u => `<a class="src" href="${esc(u)}" target="_blank" rel="noopener">Box contents source<span class="sr-only"> for ${esc(p.name)} (opens in new tab)</span> ↗</a>`).join('') + psrc.map((u, i) => `<a class="src" href="${esc(u)}" target="_blank" rel="noopener">Price source${psrc.length > 1 ? ' ' + (i + 1) : ''}<span class="sr-only"> for ${esc(p.name)} (opens in new tab)</span> ↗</a>`).join('');
   const note = I && I.msrpNote ? `<p class="why">Launch price: ${esc(I.msrpNote)}</p>` : '';
+  const pop = cat === 'fans' && p.whyPopular ? `<p class="why">${esc(p.whyPopular)}</p>` : '';
   const btn = (k, label, sr) => `<button type="button" class="linkbtn disc" aria-expanded="false" aria-controls="${idb}-${k}">${label}<span class="sr-only"> ${sr}</span></button>`;
   return `<div class="opt-tools">
     ${cat !== 'fans' || p.sizes ? `<button type="button" class="btn small viewbtn" data-view="${esc(p.id)}" aria-describedby="${idb}-n">${VIEW_ICON}View<span class="sr-only"> on its own</span></button>` : ''}
-    ${more.length || note || srcAll || boxHTML ? btn('m', 'All specs', `for the ${esc(p.name)}`) : ''}${dims.length ? btn('d', 'Dimensions', `of the ${esc(p.name)}`) : ''}
+    ${more.length || note || srcAll || boxHTML ? btn('m', 'All specs', `for the ${esc(p.name)}`) : ''}${dims.length ? btn('d', 'Dimensions', `of the ${esc(p.name)}`) : ''}${extraBtn || ''}
   </div>
-  ${more.length || note || srcAll || boxHTML ? `<div class="optpanel" id="${idb}-m" hidden>${more.length ? `<h4 class="ph">Specs</h4>${dl(more)}` : ''}${boxHTML}${note}<p class="srcs">${srcAll}</p></div>` : ''}
+  ${more.length || note || srcAll || boxHTML ? `<div class="optpanel" id="${idb}-m" hidden>${pop}${more.length ? `<h4 class="ph">Specs</h4>${dl(more)}` : ''}${boxHTML}${note}<p class="srcs">${srcAll}</p></div>` : ''}
   ${dims.length ? `<div class="optpanel" id="${idb}-d" hidden>${dl(dims)}</div>` : ''}`;
 }
 const VIEW_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>';
@@ -2049,7 +2177,15 @@ function viewPart(cat, id){
   const inBuild = cat !== 'fans' && chosen(cat, id);
   preview = inBuild ? null : {cat, id, saved:JSON.parse(JSON.stringify(sel))};
   if (!inBuild) { if (cat === 'fans') fitFanEverywhere(id); else choosePart(cat, id); rebuildScene(); refreshUI(); }
+  if (cat === 'fans') soloFan(id);
   setSolo(cat, true);
+}
+// a fan on its own: one of the model, standing upright in the middle of the case's space, the way the others are shown alone
+function soloFan(id){
+  const f = FAN_MODELS[id], z = f.sizes[0].mm;
+  if (scn['fan-solo']) { rig.remove(scn['fan-solo']); delete scn['fan-solo']; }
+  const g = fan(z, airDir('front', 'in'), fanLookOpts(id, null, z)); g.position.set(L.D / 2, L.H / 2, L.W / 2);
+  g.userData.noClash = true; rig.add(reg('fan-solo', g)); rig.updateMatrixWorld(true);
 }
 // leaving a preview any other way (another picker, Guided mode) puts the build back as it was
 function dropPreview(){ const P = preview; if (!P) return; preview = null; Object.keys(sel).forEach(k => delete sel[k]); Object.assign(sel, P.saved); rebuildScene(); $('#soloAdd').hidden = true; }
@@ -7992,12 +8128,13 @@ function placeOverlays(){
   const blocked = pt => (pt[1] > dk.top - 22 && pt[1] < dk.bottom + 22 && pt[0] > dk.left - 22 && pt[0] < dk.right + 22) || (gb && pt[1] > gb.top - 22 && pt[0] > gb.left - 22 && pt[0] < gb.right + 22) || pt[1] > r.height - curInsets.b + 4;
   hotspots.forEach((h,i) => {
     const el = document.getElementById('hot'+i); if (!el) return;
-    if (!h.a.parent || !isShown(h.a)) { el.style.display = 'none'; return; }
+    if (!h.a.parent || (!h.empty && !isShown(h.a))) { el.style.display = 'none'; return; }   // a part not picked yet is hidden, but its marker shows where it goes
     h.a.getWorldPosition(_v); const p = toScreen(_v, r);
     if (!p || p[1] < curInsets.t + 10 || blocked(p)) { el.style.display = 'none'; return; }
     el.style.display = ''; el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px';
   });
   placePortSpots(r, blocked);
+  placeHotCard();
   const ms = document.getElementById('ministep'); if (ms && !ms.hidden && !ms.classList.contains('inline')) { const tb = document.querySelector('.topbar').getBoundingClientRect();
     ms.style.left = (curInsets.l + (r.width - curInsets.l - curInsets.r) / 2) + 'px'; ms.style.top = ((tb.bottom > 0 ? tb.bottom - r.top : 0) + 10) + 'px'; ms.style.width = Math.min(600, r.width - curInsets.l - curInsets.r - 24) + 'px'; }
   fanSpots.forEach((f, k) => {
@@ -8136,7 +8273,7 @@ function placePortSpots(r, blocked){
 /* ---------- view one part on its own ---------- */
 let soloKey = null;
 const SOLO_KEYS = cat => ({case:['case', 'glass'], board:['board'], cpu:['cpu'], cooler: scn.pump ? ['pump', 'radiator'] : ['cooler'], ram:['ram'],
-  gpu:['gpu'], storage: byId.storage[sel.storage].type === 'M.2 NVMe' ? ['m2'] : ['sata'], psu:['psu'], fans:['fans-stock', 'fans-extra']})[cat] || [];
+  gpu:['gpu'], storage: byId.storage[sel.storage].type === 'M.2 NVMe' ? ['m2'] : ['sata'], psu:['psu'], fans: scn['fan-solo'] ? ['fan-solo'] : ['fans-stock', 'fans-extra']})[cat] || [];
 function soloVisibility(){
   const keep = SOLO_KEYS(soloKey).map(k => scn[k]).filter(Boolean);
   rig.children.forEach(o => { o.visible = false; });
@@ -8156,7 +8293,9 @@ function syncEmptyBar(){
 }
 $('#emptyPick').addEventListener('click', () => openPicker('case', true));
 function setSolo(cat, focusExit){
+  closeHotCard(false);
   soloKey = cat; syncSoloBtns();
+  if (!cat && scn['fan-solo']) { rig.remove(scn['fan-solo']); delete scn['fan-solo']; }
   if (!cat) { $('#soloBar').hidden = true; $('#soloAdd').hidden = true; applyVisibility(); setAirVisible(); updateOverlays(); renderHotspots(); resetView(); announce('Showing the whole build'); return; }
   if (pickOpen) closePicker(false);
   const name = preview && preview.cat === 'fans' ? FAN_MODELS[preview.id].name : cat === 'case' ? part('case').name.replace(/\s*\(.*\)/, '') : cat === 'fans' ? 'Case fans' : part(cat).name;
@@ -9500,6 +9639,7 @@ $('#msReplay').addEventListener('click', () => miniGo(GA.mi || 0));
 
 /* ---------- modes ---------- */
 function setMode(m){
+  closeHotCard(false);
   if (preview && m !== 'config') dropPreview();
   if (soloKey && m !== 'config') { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   mode = m; const cfg = m === 'config';

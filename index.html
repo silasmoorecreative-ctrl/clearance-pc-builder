@@ -73,10 +73,6 @@ button{cursor:pointer}
 .modes button{border:0;background:transparent;border-radius:999px;padding:0 18px;height:40px;font-weight:600;color:var(--muted);transition:background .2s,color .2s}
 .modes button[aria-selected="true"]{background:var(--ink);color:var(--glass-strong);box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .actions{display:flex;gap:8px}
-.topbar .menubtn{display:none}
-.menubtn svg{width:20px;height:20px}
-.menubtn .i-close,.topbar.menu-open .menubtn .i-open{display:none}
-.topbar.menu-open .menubtn .i-close{display:block}
 .iconbtn{width:var(--bar-h);height:var(--bar-h);border-radius:999px;display:grid;place-items:center;border:1px solid var(--glass-edge)}
 .iconbtn svg{width:20px;height:20px}
 .iconbtn:hover{background:var(--glass-strong)}
@@ -589,14 +585,12 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .app.strip .stage{bottom:auto;height:calc(var(--strip-top) + var(--pv))}
   .app.strip .sheet{top:calc(var(--strip-top) + var(--pv));max-height:none;border-radius:0;border-left:0;border-right:0}
   .app.strip .sheet-toggle .grab{display:none}
-  .app.guide-full .stage{height:var(--pv)}
-  .app.guide-full .sheet{top:var(--pv)}
   .app.guide-full .airlegend,.app.guide-full .roamhint,.app.guide-full .solobar,
   .app.guide-full #hotspots,.app.guide-full #fanspots,.app.guide-full #portspots,.app.guide-full #tags,.app.guide-full .crosshair{display:none!important}
   .app.guide-full .sheet-body{padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
   /* the guided build keeps every control in the sheet at the bottom: the step and part count on its handle, then the part's
-     words, its progress and Back / Replay / Next. The floating step bar is gone and the top bar folds into one menu button. */
-  .app[data-mode="guide"]   .app[data-mode="guide"] .guidehead .prog{display:none}
+     words, its progress and Back / Replay / Next. The floating step bar is gone. */
+  .app[data-mode="guide"] .guidehead .prog{display:none}
   .app[data-mode="guide"] .sheet-head{gap:8px;padding:2px 14px 12px}
   .app[data-mode="guide"] .sheet-toggle{min-height:44px;padding:4px 2px}
   .sheet-toggle .sum .pt{color:var(--muted);font-weight:500;white-space:nowrap}
@@ -608,12 +602,6 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .ministep.inhead .ms-text{margin:0;font-size:.95rem}
   .ministep.inhead .ms-ctl .btn{min-height:44px}
   .app[data-mode="config"] .ministep{display:none!important}
-  .app[data-mode="guide"] .topbar .menubtn{display:grid}
-  .app[data-mode="guide"] .topbar{left:auto;justify-content:flex-end}
-  .app[data-mode="guide"] .topbar:not(.menu-open) > :not(.menubtn){display:none!important}
-  .app[data-mode="guide"] .topbar.menu-open{flex-direction:column;align-items:flex-end;z-index:8}
-  .app[data-mode="guide"] .topbar.menu-open .menubtn{order:-1}
-  .app[data-mode="guide"] .topbar.menu-open .modemsg{display:none}
   /* the logo gives its place to the view and power buttons */
   .brand{display:none}
   .topbar{gap:8px}
@@ -674,7 +662,6 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
       <button class="iconbtn glass" id="aboutBtn" aria-label="About Clearance" title="About"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg></button>
       <div class="bgwrap"><button class="iconbtn glass" id="bgBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="bgMenu" aria-label="Background" title="Background"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M3.5 17.5l5.2-5 3.8 3.6 2.6-2.4 5.4 4.6"/></svg></button><div class="bgmenu glass" id="bgMenu" role="menu" aria-labelledby="bgBtn" hidden></div></div>
     </div>
-    <button type="button" class="iconbtn glass menubtn" id="menuBtn" aria-expanded="false" aria-controls="topbar" aria-label="Menu: mode, view, power and settings" title="Menu"><svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </header>
 
   <section class="sheet glass" id="sheet" data-open="false" data-tab="a" aria-label="Build controls">
@@ -903,7 +890,8 @@ function gpuLimitUpright(s, c, k, pos){
 // The tighter of the maker's figure and the room this layout leaves (when the layout on screen matches)
 function gpuLimit(s){
   const lim = gpuLimitSpec(s);
-  if (gpuRoom && gpuRoom.sig === roomSig(s) && gpuRoom.mm < lim.mm - 1) return {mm:gpuRoom.mm, why:`this layout leaves ${gpuRoom.mm} mm (${lim.why.replace(/^estimated: /, '')}: ${lim.mm} mm)`, est:true};
+  const room = typeof gpuRooms !== 'undefined' ? gpuRooms.get(roomSig(s)) : null;
+  if (room != null && room < lim.mm - 1) return {mm:room, why:`this layout leaves ${room} mm (${lim.why.replace(/^estimated: /, '')}: ${lim.mm} mm)`, est:true};
   return lim;
 }
 const brandOf = n => (n.match(/^(ASUS|MSI|GIGABYTE|Gigabyte|ASRock)/) || ['', 'the maker'])[1];
@@ -965,16 +953,19 @@ const W = (cat, ...more) => [cat, ...more];
 const checkShown = (s, c) => c.cats.filter(k => !(c.soft || []).includes(k)).concat(c.req || []).every(k => isPicked(s, k));
 function evaluate(s){ const all = evaluateAll(s); return (s.none && s.none.length) ? all.filter(c => checkShown(s, c)) : all; }
 function evaluateAll(s){
-  let base = evaluateRules(s); if (s !== sel) return base;
-  // from the 3D layout: a radiator low over the CPU power plug leaves the cable no room to rise before it bends
-  if (scn.epsRoom != null && scn.epsRoom < 24) { const mm = Math.max(0, Math.floor(scn.epsRoom)), hit = !!scn.epsHit;
-    base = base.concat([{cats:['cooler','psu','board'], status:hit ? 'fail' : 'warn', title:hit ? 'Radiator fans sit on the CPU power plug' : 'Tight space for the CPU power cable',
+  // the 3D layout of this build (the one on screen, or laid out off screen for the picker) comes first: the card's room uses it
+  const lay = layoutOf(s);
+  let base = evaluateRules(s); if (!lay) return base;
+  // from the 3D layout: a radiator low over the CPU power plug leaves the cable no room to rise before it bends.
+  // It's the radiator's placement that does it, so it counts against the cooler (and shows once a power supply and board are in)
+  if (lay.epsRoom != null && lay.epsRoom < 24) { const mm = Math.max(0, Math.floor(lay.epsRoom)), hit = !!lay.epsHit;
+    base = base.concat([{cats:['cooler'], status:hit ? 'fail' : 'warn', title:hit ? 'Radiator fans sit on the CPU power plug' : 'Tight space for the CPU power cable',
       detail:hit ? 'The fans under the radiator come down to the top of the CPU power plug, so the cable has nowhere to go. Mount the radiator in another position or pick a thinner one.'
                  : `The radiator's fans leave ${mm} mm of room over the CPU power plug, so the cable has to bend over right as it leaves the plug. Plug it in before you mount the radiator, and expect it to press against the fans.`,
-      metric:`${mm} mm of room over the plug · from the 3D layout`, req:['case']}]); }
+      metric:`${mm} mm of room over the plug · from the 3D layout`, req:['case', 'psu', 'board']}]); }
   // an upright card's own glass check already says it reaches the glass: the 3D layout's matching clash would repeat it
   const upGlass = vgOn(s) && base.some(ch => ch.status === 'fail' && /^Card hits/.test(ch.title));
-  const cc = clashChecks(base).filter(c => !(upGlass && [c.clash.a.key, c.clash.b.key].includes('gpu') && /glass side panel/.test(c.clash.names.join('|')))); if (!cc.length) return base;
+  const cc = clashChecks(base, lay.clashes).filter(c => !(upGlass && [c.clash.a.key, c.clash.b.key].includes('gpu') && /glass side panel/.test(c.clash.names.join('|')))); if (!cc.length) return base;
   // a clash in the 3D layout overrides the matching "fits" line, so the list never says both
   const drop = [];
   cc.forEach(c => { const k = c.clash, keys = [k.a.key, k.b.key], has = x => keys.includes(x), names = k.names.join('|');
@@ -1153,9 +1144,13 @@ function evaluateRules(s){
 const RANK = {fail:3, warn:2, info:1, pass:0};
 function worst(list){ return list.reduce((a,c)=> RANK[c.status] > RANK[a] ? c.status : a, 'pass'); }
 function catStatus(checks, cat){ return worst(checks.filter(c => c.cats.includes(cat) && c.status !== 'info')); }
+const optionBuild = (cat, id) => Object.assign({}, sel, {[cat]:id, none:(sel.none || []).filter(k => k !== cat)});
 function optionFit(cat, id){
-  const s = Object.assign({}, sel, {[cat]:id, none:(sel.none || []).filter(k => k !== cat)});
-  const ch = evaluate(s).filter(c => c.cats.includes(cat) && c.status !== 'info');
+  const s = optionBuild(cat, id), all = evaluate(s);
+  // an option's own checks, plus any problem picking it would start elsewhere in the build (a case that puts the memory
+  // against the power supply, a cooler whose radiator meets the top panel), so "Fits" is only shown when nothing new goes wrong
+  const now = s[cat] === sel[cat] ? null : evaluate(sel), isNew = c => now && (c.status === 'warn' || c.status === 'fail') && !now.some(o => o.title === c.title && o.status === c.status);
+  const ch = all.filter(c => c.status !== 'info' && (c.cats.includes(cat) || isNew(c)));
   const bad = ch.filter(c=>c.status==='fail'), w = ch.filter(c=>c.status==='warn');
   if (bad.length) return {status:'fail', text:bad[0].title, metric:bad[0].metric};
   if (w.length) return {status:'warn', text:w[0].title, metric:w[0].metric};
@@ -1564,7 +1559,25 @@ function renderNav(checks){
       <span class="ico">${catIcon(c.key)}</span><span class="k">${esc(c.label)}</span><span class="v">${esc(name)}${pv ? ' <span class="pvtag">Preview</span>' : ''}</span><span class="s"><span class="dotstat ${st}" title="${STATUS_WORD[st]}"></span></span></button><button type="button" class="solobtn" data-solo="${c.key}" aria-pressed="${soloKey === c.key}" aria-label="View the ${esc(name)} on its own" title="View on its own"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></button></li>`;
   }).join('');
 }
+// Each option's fit includes its 3D layout, which takes a moment to work out off screen. Options whose layout isn't known yet
+// say "Checking fit" and fill in one at a time, so the picker opens at once and never shows a fit it hasn't checked.
+let fitQueue = [], fitTimer = 0;
+function optionFitNow(cat, id){
+  if (layoutKnown(optionBuild(cat, id))) return optionFit(cat, id);
+  fitQueue.push([cat, id]); if (!fitTimer) fitTimer = setTimeout(runFitQueue, 40);
+  return {status:'info', text:'Checking fit', pending:true};
+}
+function runFitQueue(){
+  fitTimer = 0;
+  const job = fitQueue.shift(); if (!job) return;
+  const [cat, id] = job;
+  try { if (pickOpen && cat === activeCat) { const f = optionFit(cat, id), el = document.getElementById(`o-${id}-s`);
+      if (el) el.innerHTML = chip(f.status, f.status === 'pass' ? 'Fits' : f.text); } }
+  catch (e) { console.warn('option fit', cat, id, e); }
+  finally { if (fitQueue.length && !fitTimer) fitTimer = setTimeout(runFitQueue, 0); }
+}
 function renderOptions(){
+  fitQueue = [];
   const cat = CATS.find(c=>c.key===activeCat);
   $('#pickTitle').textContent = cat.choose;
   if (activeCat === 'fans') { renderFanOptions(); return; }
@@ -1601,7 +1614,7 @@ function renderOptions(){
       <p class="why" id="psufan-h">${pf.fromManual ? `${esc(byId.cases[sel.case].brand)}'s manual says fan up for this case.` : pf.vent ? 'This case has a filtered vent under the power supply, so fan down pulls in cool outside air.' : 'There is no vent under the power supply.'}</p></div>`; }
   const list = listFor(activeCat), selIdx = list.findIndex(p => chosen(activeCat, p.id));
   const cards = list.map(p => {
-    const f = optionFit(activeCat, p.id), idb = `o-${p.id}`;
+    const f = optionFitNow(activeCat, p.id), idb = `o-${p.id}`;
     const on = chosen(activeCat, p.id);
     return `<div class="opt${on?' on':''}"><input type="radio" name="opt" id="opt-${esc(p.id)}" value="${esc(p.id)}" ${on?'checked':''} aria-labelledby="${idb}-n" aria-describedby="${idb}-s ${idb}-f">
       <label class="opt-main" for="opt-${esc(p.id)}">${thumbHTML(activeCat, p.id)}<span class="opt-body"><span class="n" id="${idb}-n">${esc(p.name)}</span>
@@ -1728,20 +1741,6 @@ function placeDock(){
   else if (d.parentElement === tb) app.insertBefore(d, $('#viewPop'));
 }
 placeDock();
-// Phones in the guided build: the top bar folds into one menu button so the view keeps the room; it opens as a short column
-const topbar = $('#topbar'), menuBtn = $('#menuBtn');
-function setMenu(open, refocus){
-  topbar.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open);
-  if (!open && typeof closeBgMenu === 'function' && !$('#bgMenu').hidden) closeBgMenu(false);
-  if (refocus) menuBtn.focus();
-}
-menuBtn.addEventListener('click', () => setMenu(!topbar.classList.contains('menu-open')));
-document.addEventListener('pointerdown', e => { if (topbar.classList.contains('menu-open') && !topbar.contains(e.target)) setMenu(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && topbar.classList.contains('menu-open') && $('#bgMenu').hidden) { setMenu(false, true); } });
-// the view options and About open on their own, so the menu steps aside for them
-['#viewBtn', '#aboutBtn'].forEach(q => $(q).addEventListener('click', () => { if (topbar.classList.contains('menu-open')) setMenu(false); }));
-// a control that folded away can't take the focus back, so the menu button does
-const focusShown = el => (el.offsetParent ? el : menuBtn.offsetParent ? menuBtn : el).focus();
 function measureSheet(){
   const h = isMobile() ? sheet.getBoundingClientRect().height : 0;
   app.style.setProperty('--sheet-h', h + 'px');
@@ -1847,9 +1846,8 @@ setBackground(BACKGROUNDS.some(b => b.id === savedBg) ? savedBg : 'light', false
 /* ---------- about ---------- */
 const about = $('#about');
 $('#aboutBtn').addEventListener('click', () => { if (about.showModal) about.showModal(); else about.setAttribute('open',''); });
-$('#aboutClose').addEventListener('click', () => { if (about.close) about.close(); else about.removeAttribute('open'); focusShown($('#aboutBtn')); });
+$('#aboutClose').addEventListener('click', () => { if (about.close) about.close(); else about.removeAttribute('open'); $('#aboutBtn').focus(); });
 about.addEventListener('click', e => { if (e.target === about && about.close) about.close(); });
-about.addEventListener('close', () => { if (document.activeElement === document.body || !$('#aboutBtn').offsetParent) focusShown($('#aboutBtn')); });
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || (about.open)) return;
@@ -6624,10 +6622,8 @@ let animList = {rotors:[], rgb:[], lit:[], screen:[], rgbMats:[]};     // board 
 let L = null;
 const limitPlanes = {};
 function disposeTree(o){ o.traverse(n => { if (n.geometry && !n.geometry.userData.shared) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => { if (m.map && !(m.map.userData && m.map.userData.shared)) m.map.dispose(); m.dispose(); }); }); }
-function rebuildScene(){
-  guideDrop();
-  while (rig.children.length) { const ch = rig.children[0]; rig.remove(ch); disposeTree(ch); }
-  for (const k in scn) delete scn[k];
+// Every part, placed, with its cables drawn but not yet settled: the build on screen, or one the picker lays out off screen
+function buildParts(){
   const c = byId.cases[sel.case], b = byId.motherboards[sel.board], k = byId.coolers[sel.cooler], x = CASE_EXTRA[c.id];
   L = layoutFor(c);
   rig.scale.x = -1; rig.position.set(L.D/2, L.feetH, -L.W/2);   // model x runs front→rear; mirrored so the glass side reads like a real build (rear I/O on the left)
@@ -6656,7 +6652,15 @@ function rebuildScene(){
   const holes = planHoles(c, L, b, gpu, psu);
   buildCutouts(scn.case, c, L, b, holes);
   const cab = buildCables(c, L, b, gpu, psu, sata, holes); Object.values(cab).forEach(o => rig.add(o));
-  rig.updateMatrixWorld(true); buildRopes();
+  rig.updateMatrixWorld(true);
+  return {c, F, gpu};
+}
+function rebuildScene(){
+  guideDrop();
+  while (rig.children.length) { const ch = rig.children[0]; rig.remove(ch); disposeTree(ch); }
+  for (const k in scn) delete scn[k];
+  const {c, F, gpu} = buildParts();
+  buildRopes();
   ['cpu','paste','ram','m2','cooler','pump','radiator','psu','sata','fans-extra','fans-stock','cable-24','cable-eps','cable-gpu','cable-front','cable-sata'].forEach(kk => { if (scn[kk]) scn[kk].userData.home = scn[kk].position.clone(); });
   // limit planes
   const lim = gpuLimit(sel), gx = gpu.position.x - lim.mm, vp = gpu.userData.upright && vgPlace(sel);
@@ -6845,8 +6849,9 @@ const CLASH_SKIP = new Set(['pump|tubes', 'radiator|tubes', 'case|fan', 'case|ra
 const pairKey = (a, b) => [a, b].sort().join('|');
 
 // Room in front of the card in this layout: bracket to the nearest case part, fan or radiator in line with it
-let gpuRoom = null;
-const roomSig = s => [s.case, s.board, JSON.stringify(s.fanCfg), resolvedRadPos(s), vgOn(s) ? 'v' : 'h'].join('|');
+// per layout: the build on screen and any the picker laid out off screen
+const gpuRooms = new Map();
+const roomSig = s => [s.case, s.board, s.gpu, JSON.stringify(s.fanCfg), resolvedRadPos(s), vgOn(s) ? 'v' : 'h'].join('|');
 // the card's bracket plane: where it lies flat, the case's GPU line; upright, the slot plane it stands against
 const gpuBX = () => scn.gpu ? scn.gpu.position.x : L.gpuX;
 function measureGpuRoom(){
@@ -6856,7 +6861,7 @@ function measureGpuRoom(){
   const z0 = up ? scn.gpu.position.z - 4 : L.boardZ + GPU_SEAT, z1 = up ? z0 + g.thickness : z0 + g.height;
   const list = leafBoxes(scn.case).concat(leafBoxes(scn['fans-stock']), leafBoxes(scn['fans-extra']), scn.radiator ? leafBoxes(scn.radiator, o => o.geometry.type !== 'TubeGeometry') : []);
   const stop = list.filter(l => l.b.max.y > y0 + 1 && l.b.min.y < y1 - 1 && l.b.max.z > z0 + 1 && l.b.min.z < z1 - 1 && l.b.max.x < gx - 120).reduce((m, l) => Math.max(m, l.b.max.x), -1e9);
-  gpuRoom = stop > -1e8 ? {sig:roomSig(sel), mm:Math.floor(gx - stop)} : null;
+  gpuRooms.set(roomSig(sel), stop > -1e8 ? Math.floor(gx - stop) : null); if (gpuRooms.size > 400) gpuRooms.delete(gpuRooms.keys().next().value);
 }
 function detectClashes(){
   if (!scn.gpu || !scn.case) return [];
@@ -6891,6 +6896,42 @@ function detectClashes(){
   return found.sort((x, y) => y.depth - x.depth);
 }
 
+/* ---------- the 3D layout of a build that isn't on screen ----------
+   The picker says how each option would fit before it's picked. Some checks come only from the 3D layout: parts that run
+   into each other, room over the CPU power plug, room in front of the card. So each option's build is laid out off screen
+   (every part placed and its cables drawn, without settling them), measured and dropped, and the build on screen is put
+   back as it was, in the same moment, so nothing on screen changes. Results are kept per build. */
+const layoutCache = new Map();
+const buildKey = s => JSON.stringify(Object.keys(s).filter(k => s[k] !== undefined).sort().map(k => [k, s[k]]));
+// whether a build's layout is already known (so its fit can be shown without laying it out now)
+const layoutKnown = s => typeof sceneReady === 'undefined' || !sceneReady || !scn.case || s === sel || layoutCache.has(buildKey(s)) || buildKey(s) === buildKey(sel);
+function layoutOf(s){
+  if (typeof sceneReady === 'undefined' || !sceneReady || !scn.case) return null;
+  const live = () => ({clashes, epsRoom: scn.epsRoom, epsHit: scn.epsHit});
+  if (s === sel) return live();
+  const key = buildKey(s); if (key === buildKey(sel)) return live();
+  if (layoutCache.has(key)) return layoutCache.get(key);
+  const keep = {sel: Object.assign({}, sel), scn: Object.assign({}, scn), kids: rig.children.slice(), L, assembly, pos: rig.position.clone(), sx: rig.scale.x};
+  let out = null;
+  try {
+    keep.kids.forEach(ch => rig.remove(ch));
+    for (const k in scn) delete scn[k];
+    for (const k in sel) delete sel[k]; Object.assign(sel, s);
+    buildParts(); measureGpuRoom();
+    out = {clashes: detectClashes().filter(c => c.cats.every(k => isPicked(sel, k))), epsRoom: scn.epsRoom, epsHit: scn.epsHit};
+  } catch (e) { console.warn('layout check', e); }
+  finally {
+    // the off-screen parts were never drawn, so there is nothing on the graphics card to free; they are simply let go
+    rig.children.slice().forEach(ch => rig.remove(ch));
+    for (const k in scn) delete scn[k]; Object.assign(scn, keep.scn);
+    for (const k in sel) delete sel[k]; Object.assign(sel, keep.sel);
+    keep.kids.forEach(ch => rig.add(ch)); L = keep.L; assembly = keep.assembly; rig.position.copy(keep.pos); rig.scale.x = keep.sx; rig.updateMatrixWorld(true);
+  }
+  if (layoutCache.size > 300) layoutCache.delete(layoutCache.keys().next().value);
+  layoutCache.set(key, out);
+  return out;
+}
+
 // What to do about each kind of clash
 function clashAdvice(c){
   const ks = [c.a.key, c.b.key].sort().join('|'), has = k => c.a.key === k || c.b.key === k;
@@ -6907,8 +6948,8 @@ function clashAdvice(c){
   return 'Change one of the two parts.';
 }
 // Fit-check entries for the current build. A clash the spec rules already call out is not repeated.
-function clashChecks(base){
-  return clashes.filter(c => !(base || []).some(ch => ch.status === 'fail' && c.cats.every(k => ch.cats.includes(k) || k === 'case')))
+function clashChecks(base, list){
+  return (list || clashes).filter(c => !(base || []).some(ch => ch.status === 'fail' && c.cats.every(k => ch.cats.includes(k) || k === 'case')))
     .map(c => { const mm = Math.max(1, Math.round(c.depth)), est = c.a.key === 'hs' || c.b.key === 'hs', sev = c.depth >= 3 && !est ? 'fail' : 'warn';
       const cap = s => s[0].toUpperCase() + s.slice(1);
       return {cats:[...new Set(c.cats.filter(k => k !== 'case').concat(c.cats.includes('case') ? ['case'] : []))], status:sev, clash:c,
@@ -7749,9 +7790,7 @@ let camTween = null;
 let curInsets = {l:0, r:0, t:0, b:0};
 function measureInsets(){
   const W = stageEl.clientWidth, ins = {l:0, r:0, t:0, b:0};
-  if (app.classList.contains('guide-full')) return ins;   // the view strip has nothing laid over it
-  // phones in the guided build: only the small menu button sits at the top, in a corner, so the build can use the full height
-  ins.t = isMobile() && mode === 'guide' ? 12 : document.querySelector('.topbar').getBoundingClientRect().bottom;
+  ins.t = document.querySelector('.topbar').getBoundingClientRect().bottom;
   const ms = document.getElementById('ministep');   // the step's part-by-part card over the top of the view
   if (ms && !ms.hidden && !ms.classList.contains('inline')) ins.t = Math.max(ins.t, ms.getBoundingClientRect().bottom - stageEl.getBoundingClientRect().top + 6);
   if (isMobile()) { ins.b = app.classList.contains('strip') ? 0 : sheet.getBoundingClientRect().height + 8; return ins; }
@@ -8317,7 +8356,7 @@ $('#viewPop').addEventListener('click', e => {
   announce(k.startsWith('xray') || k === 'cables' || k === 'markers' ? `${label} ${panels[k] ? 'on' : 'off'}` : `${label} ${panels[k] ? 'on' : 'removed'}`);
 });
 document.addEventListener('pointerdown', e => { const pop = $('#viewPop'); if (!pop.hidden && !pop.contains(e.target) && !$('#viewBtn').contains(e.target)) setViewOpen(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#viewPop').hidden) { setViewOpen(false); focusShown($('#viewBtn')); e.stopPropagation(); } }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#viewPop').hidden) { setViewOpen(false); $('#viewBtn').focus(); e.stopPropagation(); } }, true);
 let airTimer = null;
 function buildAirSoon(){ clearTimeout(airTimer); airTimer = setTimeout(() => { buildAir(); setAirVisible(); }, 30); }
 
@@ -9086,13 +9125,6 @@ function buildSteps(){
   const latch = (m2.securing || '').split(/[;(]/)[0].trim();
   const S = {};
 
-  S.tools = {key:'tools', title:'Before you start', show:[], focus:['case'],
-    sum:'Clear a table and gather a few tools. Every step lists the screws it needs and what to check.',
-    todo:['A #2 Phillips screwdriver (a magnetic tip helps)', 'A hard, well-lit table, not carpet', 'A small bowl for screws', 'Cable ties or Velcro straps',
-          'Touch the bare metal of the case before handling parts, to discharge static'],
-    watch:'Keep each part in its anti-static bag until its step comes up.',
-    why:['A first build usually takes two to four hours. Your checklist ticks save in this browser, so you can stop and pick up later.']};
-
   const prepTodo = ['Take off the glass side panel and the back panel', 'Find the manual and the screw bag in the case box'];
   if (c.id === 'lian-li-lancool-216') prepTodo.push(k.type === 'air' ? 'Choose the board height: keep the standoffs as shipped (water-cooling mode), or move them to the up-arrow holes for air-cooling mode' : 'Keep the standoffs as shipped (water-cooling mode): it leaves room for a top radiator');
   if (c.id === 'lian-li-o11-dynamic-evo') prepTodo.push('Build in Normal mode (as shipped). Reverse mode means moving the brackets first');
@@ -9290,7 +9322,7 @@ function buildSteps(){
 
 // Build order: a sensible default, then moves this build needs, each with its reason shown on the step.
 function orderSteps(S, o){
-  let order = ['tools','prep','cpu','m2','ram','cooler','board','rad','pump','psu','sata','fans','cable-main','gpu','cable-gpu','cable-front','bios','finish'];   // the radiator goes in after the board, then the pump onto the CPU
+  let order = ['prep','cpu','m2','ram','cooler','board','rad','pump','psu','sata','fans','cable-main','gpu','cable-gpu','cable-front','bios','finish'];   // the radiator goes in after the board, then the pump onto the CPU
   const move = (key, after, why) => { if (!S[key] || !S[after]) return; order = order.filter(x => x !== key); order.splice(order.indexOf(after) + 1, 0, key); S[key].moved = why; };
   if (o.openSideRad) move('rad', 'pump', 'After the pump: this radiator sits over the open side, where it would block the pump.');
   if (o.c.id === 'fractal-north') move('psu', 'prep', "Moved up: Fractal's manual installs the power supply first.");
@@ -9406,7 +9438,7 @@ function renderStepList(){
 function goStep(i, focusTitle){
   const prev = stepIdx; stepIdx = Math.max(0, Math.min(steps.length-1, i));
   if (stepIdx !== 0) resumeOffer = 0;
-  if (!(stepIdx === 0 && resumeOffer)) { progress.step = stepIdx; saveProgress(); }
+  if (!(stepIdx === 0 && resumeOffer)) { progress.step = stepIdx; progress.key = steps[stepIdx].key; saveProgress(); }
   ['board','cpu','paste','ram','m2','cooler','pump','radiator','gpu','psu','sata','fans-stock','fans-extra','cable-24','cable-eps','cable-gpu','cable-front','cable-sata','case'].forEach(k => scn[k] && tint(scn[k], new THREE.Color(0), 0));
   guideClear(); applyVisibility();
   const s = steps[stepIdx];
@@ -9428,7 +9460,7 @@ function frameStep(){
     const saved = s.focus.map(k => scn[k] ? [scn[k], scn[k].position.clone()] : null).filter(Boolean);
     saved.forEach(([o]) => { if (o.userData.home) o.position.copy(o.userData.home); });
     rig.updateMatrixWorld(true);
-    if (['tools','prep','finish'].includes(s.key)) box.setFromObject(scn.case);
+    if (['prep','finish'].includes(s.key)) box.setFromObject(scn.case);
     else if (s.key === 'board' || s.key === 'bios') box.expandByObject(scn.board);
     else if (s.key === 'cable-front') ['fpanel','usb3','audio'].forEach(k => { const an = scn.anchors[k]; if (an) box.expandByPoint(an.getWorldPosition(new THREE.Vector3())); });
     else saved.forEach(([o]) => box.expandByObject(o));
@@ -9438,7 +9470,7 @@ function frameStep(){
     if (GA.tl && GA.tl.frameExtra && GA.tl.step === s) { const sv = scn.pump && [scn.pump.position.clone(), scn.pump.quaternion.clone(), scn.pump.visible]; box.union(GA.tl.frameExtra()); if (sv) { scn.pump.position.copy(sv[0]); scn.pump.quaternion.copy(sv[1]); scn.pump.visible = sv[2]; } }
     if (box.isEmpty()) box.setFromObject(scn.case);
     const dir = s.key === 'psu' && L.type === 'dual-chamber' ? new THREE.Vector3(-0.3, 0.3, -1) : s.key === 'sata' ? new THREE.Vector3(-0.2, 0.25, -1) : s.key === 'cable-front' ? new THREE.Vector3(0.35, -0.12, 1) : DEFAULT_DIR;
-    frameBox(box, dir, s.bench ? 1.5 : ['tools','prep','finish'].includes(s.key) ? 1.0 : 1.45);
+    frameBox(box, dir, s.bench ? 1.5 : ['prep','finish'].includes(s.key) ? 1.0 : 1.45);
   }
 }
 $('#stepcard').addEventListener('click', e => {
@@ -9471,7 +9503,6 @@ function setMode(m){
   if (preview && m !== 'config') dropPreview();
   if (soloKey && m !== 'config') { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   mode = m; const cfg = m === 'config';
-  setMenu(false);
   // leaving Assemble: the step's motion stops and its part counter goes with it
   if (m === 'config') { GA.playing = false; GA.hold = false; $('#ministep').hidden = true; }
   app.dataset.mode = m;
@@ -9486,7 +9517,8 @@ function setMode(m){
   ['board','cpu','paste','ram','m2','cooler','pump','radiator','gpu','psu','sata','fans-stock','fans-extra','case','cable-24','cable-eps','cable-gpu','cable-front','cable-sata'].forEach(k => scn[k] && tint(scn[k], new THREE.Color(0), 0));
   syncEmptyBar();
   if (cfg) { applyHighlights(); applyVisibility(); updateOverlays(); refreshUI(); updateViewOffset(); resetView(); announce('Configure mode'); }
-  else { steps = buildSteps(); stepIdx = 0; loadProgress(); resumeOffer = progress.step > 0 && progress.step < steps.length ? progress.step : 0; renderHotspots(); updateViewOffset(); goStep(0); }
+  else { steps = buildSteps(); stepIdx = 0; loadProgress(); { // the saved step by name; saves from before v35 have only a number, counted with the old "Before you start" step first
+      const at = progress.key ? steps.findIndex(x => x.key === progress.key) : progress.step - 1; resumeOffer = at > 0 && at < steps.length ? at : 0; } renderHotspots(); updateViewOffset(); goStep(0); }
   setAirVisible();
   updateSceneDesc();
   requestAnimationFrame(measureSheet);

@@ -196,13 +196,18 @@ legend{padding:0}
 .opt .row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:2px 0 4px}
 .opt .row .chip{white-space:normal;text-align:left}
 /* part rows: thumbnail, name, fit, key facts; View / More specs / Dimensions below */
-.opt-main{display:flex;gap:12px;align-items:flex-start;cursor:pointer;min-width:0}
+.opt-main{display:grid;grid-template-columns:64px minmax(0,1fr);grid-auto-rows:auto;column-gap:12px;align-items:start;cursor:pointer;min-width:0}
+.opt-main > .thumb{grid-column:1;grid-row:1 / span 2}
+.opt-body{display:contents}
+.opt-main .n{grid-column:2;grid-row:1;align-self:end}
+.opt-main .row{grid-column:2;grid-row:2;align-self:start}
+.opt-main .why{grid-column:2}
+.opt-main .facts{grid-column:1 / -1;margin-top:10px}
 .fanrow{padding-left:12px} .fanrow .opt-main{cursor:default}
 .thumb{flex:none;width:64px;height:64px;border-radius:12px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);
   background:radial-gradient(90% 90% at 50% 35%, var(--thumb-1) 0%, var(--thumb-2) 100%);color:var(--muted)}
 .thumb img{width:64px;height:64px;display:block}
 .thumb-none svg{width:26px;height:26px}
-.opt-body{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 .facts{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.78rem;line-height:1.35;margin-top:2px}
 .fact{display:contents}
 .fact .k{color:var(--muted)}

@@ -188,9 +188,9 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;
 legend{padding:0}
 .opt{position:relative;display:block;background:var(--raised);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 12px 12px 42px;transition:background .15s,border-color .15s}
 .opt:hover{background:var(--raised-hover);border-color:var(--line-strong)}
-.opt input{position:absolute;left:14px;top:33px;width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}
-.opt:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--raised-hover)}
-.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt > input{position:absolute;left:14px;top:33px;width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}
+.opt:has(> input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--raised-hover)}
+.opt:has(> input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .opt .n{font-weight:600;line-height:1.3;display:block}
 .opt .spec{display:block;font-family:var(--font-mono);font-size:.76rem;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
 .opt .row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:2px 0 4px}
@@ -291,6 +291,7 @@ legend{padding:0}
 .seg input{accent-color:var(--accent);margin:0}
 .seg label.off{opacity:.55;cursor:not-allowed;border-style:dashed}
 .subhead{display:flex;flex-direction:column;gap:8px}
+.opt .aioset{margin:14px 0 0 -30px;cursor:default}
 .aioset{display:flex;flex-direction:column;gap:14px;margin:-4px 0 0 18px;padding:14px 14px 14px 16px;border-left:2px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r-md) var(--r-md) 0}
 .aioset .eyebrow{margin:0}
 .aioset .why{margin:0}
@@ -552,8 +553,8 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .airlegend .note{display:none}
   .guidebar .btn{padding:0 14px}
   .guidehead{padding:6px 16px 10px}
-  /* sheet open: a 16:9 view strip on top (below the top bar in Configure), the sheet below it */
-  .app.strip{--pv:min(56.25vw, 62vh);--strip-top:calc(var(--top) + var(--bar-h) + 8px)}
+  /* sheet open: a short view strip on top (below the top bar in Configure), the sheet below it, taller */
+  .app.strip{--pv:min(46vw, 50vh);--strip-top:calc(var(--top) + var(--bar-h) + 8px)}
   .app.strip .stage{bottom:auto;height:calc(var(--strip-top) + var(--pv))}
   .app.strip .sheet{top:calc(var(--strip-top) + var(--pv));max-height:none;border-radius:0;border-left:0;border-right:0}
   .app.strip .sheet-toggle .grab{display:none}
@@ -745,7 +746,7 @@ const MOUNT_LABEL = {front:'front', top:'top', rear:'rear', bottom:'bottom', sid
 const sel = {
   case:'corsair-4000d-airflow', finish:'White', board:'msi-mag-b850-tomahawk-wifi', cpu:'ryzen-7-9800x3d',
   cooler:'nzxt-kraken-240-2024', radPos:'top', ram:'corsair-vengeance-ddr5-32gb-6000', gpu:'asus-tuf-rtx-5070-ti-oc',
-  storage:'samsung-990-pro-2tb', psu:'corsair-rm850x-2024', fans:'stock', psuFan:null, pumpDir:null, hoseDir:'glass', gpuMount:'horizontal',
+  storage:'samsung-990-pro-2tb', psu:'corsair-rm850x-2024', fans:'stock', psuFan:null, pumpDir:null, hoseDir:'glass', gpuMount:'horizontal', radAt:0,
   none:[]   // parts not picked yet (after Start over): they stay in the scene as placeholders, hidden and left out of every check
 };
 const BUILD_CATS = ['case', 'board', 'cpu', 'cooler', 'ram', 'gpu', 'storage', 'psu'];
@@ -967,7 +968,7 @@ function evaluateRules(s){
     // a front radiator that reaches down past the PSU shroud: measured against the shroud's own front edge and cut-outs
     const G = CASE_GEO[c.id], S = G && G.shroud;
     if (pos === 'front' && S && k.radiatorDims && G.fans.front && G.fans.front.in === '+x') {
-      const P = radPlacement('front', k, c, layoutFor(c, s));
+      const P = radPlacement('front', k, c, layoutFor(c, s), s);
       if (P && P.box[2] < S.y) {
         // where the solid shroud top starts in front of this radiator (a front cut-out that spans its width moves the edge back)
         let edge = S.x0; (S.cuts || []).forEach(([x0, x1, z0, z1]) => { if (x0 <= edge + 1 && z0 <= P.box[4] && z1 >= P.box[5]) edge = Math.max(edge, x1); });
@@ -1433,9 +1434,10 @@ function fanSummary(s){
 }
 // The starting build: every intake position filled, exhaust out the rear and top (the radiator's fans when it sits up there)
 const FILL_FAN = {Corsair:'corsair-rs-argb', 'Lian Li':'lian-li-uni-fan-sl-inf'};
+// A case's starting fans: every fan spot filled, apart from the shroud-top spots over the power supply (H5, Lancool 216)
 function fullFanCfg(caseId){
-  const c = byId.cases[caseId], cfg = stockFanCfg(caseId);
-  Object.entries(cfg).forEach(([m, f]) => { if (!f.slots || !f.slots.length) return;
+  const c = byId.cases[caseId], cfg = stockFanCfg(caseId), overPsu = m => m === 'bottom' && !!(CASE_GEO[caseId] || {}).shroud;
+  Object.entries(cfg).forEach(([m, f]) => { if (!f.slots || !f.slots.length || overPsu(m)) return;
     if (f.model === 'none') {   // no fan ships here: a retail fan from the list (drawn from its CAD file), the case maker's own where the list has one
       const size = (CASE_EXTRA[caseId].mounts[m] || [0, f.size])[1], pick = [FILL_FAN[c.brand], 'arctic-p12-pro-pst'].find(id => FAN_MODELS[id] && FAN_MODELS[id].sizes.some(z => z.mm === size));
       if (!pick) return;   // no fan in the list comes in this size (the NR200P's 92 mm rear): the spot stays empty
@@ -1524,6 +1526,10 @@ function renderOptions(){
     if (mounts.length) { const off = mounts.filter(m => !opts.includes(m)), cap = m => m[0].toUpperCase() + m.slice(1);
       aioBlock = `<div class="subhead"><h3 id="rad-l">Radiator position</h3><div class="seg" role="radiogroup" aria-labelledby="rad-l"${off.length ? ' aria-describedby="rad-h"' : ''}>${mounts.map(o => `<label${opts.includes(o) ? '' : ' class="off"'}><input type="radio" name="radpos" id="rad-${o}" value="${o}" ${pos===o?'checked':''}${opts.includes(o) ? '' : ' disabled'}>${cap(o)}</label>`).join('')}</div>
         ${off.length ? `<p class="why" id="rad-h">${off.map(m => vNo.includes(m) ? `The ${m}: ${c.brand} says it doesn't work with a vertical graphics card.` : notes[m] && !(c.radiator[m] || []).length ? `The ${m}: ${notes[m]}` : `The ${m} takes ${c.radiator[m].join(', ')} mm radiators, not ${k.radiatorSize} mm.`).join(' ')}</p>` : ''}</div>`; }
+    // a radiator shorter than its mount can sit toward either end of it
+    if (k.type === 'aio' && pos) { const sp = radSpots(pos, k, c, layoutFor(c)), at = Math.max(0, Math.min(sp.n - 1, sel.radAt | 0));
+      if (sp.n > 1) aioBlock += `<div class="subhead"><h3 id="radat-l">Where on the ${pos}</h3><div class="seg" role="radiogroup" aria-labelledby="radat-l" aria-describedby="radat-h">${sp.names.map((nm, i) => `<label><input type="radio" name="radat" id="radat-${i}" value="${i}" ${at===i?'checked':''}>${nm}</label>`).join('')}</div>
+        <p class="why" id="radat-h">The ${k.radiatorSize} mm radiator covers ${Math.round(k.radiatorSize / 120)} of the ${pos} mount's fan spots, so it can sit toward either end. The spot it leaves stays empty.</p></div>`; }
     if (k.type === 'aio') { const pd = sel.pumpDir || 'auto', auto = (scn.pump && scn.pump.userData.dir) || autoPumpDir(sel);
       aioBlock += `<div class="subhead"><h3 id="pump-l">Pump tubes point</h3><div class="seg wrap" role="radiogroup" aria-labelledby="pump-l" aria-describedby="pump-h">${['auto','top','front','bottom','rear'].map(d => `<label><input type="radio" name="pumpdir" id="pump-${d}" value="${d}" ${pd===d?'checked':''}>${d === 'auto' ? `Auto (${PUMP_DIR_NAME[auto]})` : PUMP_DIR_NAME[d][0].toUpperCase() + PUMP_DIR_NAME[d].slice(1)}</label>`).join('')}</div>
       <p class="why" id="pump-h">The pump head turns in 90° steps. Auto points the tubes at the radiator. Toward the rear can press the tubes against the I/O cover, and the fit check flags it.</p></div>`;
@@ -1549,11 +1555,11 @@ function renderOptions(){
       ${rowTools(activeCat, p, idb, f)}</div>`;
   });
   // a liquid cooler's own settings sit right under its card, where the eye already is after choosing it
+  // a liquid cooler's own settings sit inside its card, with the rest of its information
   if (aioBlock && selIdx >= 0) {
-    const nm = esc(list[selIdx].name);
-    $('#options').innerHTML = `${extra}<fieldset><legend class="sr-only">${esc(cat.choose)}</legend>${cards.slice(0, selIdx + 1).join('')}</fieldset>
-      <section class="aioset" id="aioset" aria-label="Set up the ${nm}"><p class="eyebrow">Set up this cooler</p>${aioBlock}</section>
-      ${selIdx + 1 < cards.length ? `<fieldset><legend class="sr-only">More coolers</legend>${cards.slice(selIdx + 1).join('')}</fieldset>` : ''}`;
+    const nm = esc(list[selIdx].name), c0 = cards[selIdx], cut = c0.lastIndexOf('</div>');
+    cards[selIdx] = c0.slice(0, cut) + `<section class="aioset" id="aioset" aria-label="Set up the ${nm}"><p class="eyebrow">Set up this cooler</p>${aioBlock}</section>` + c0.slice(cut);
+    $('#options').innerHTML = `${extra}<fieldset><legend class="sr-only">${esc(cat.choose)}</legend>${cards.join('')}</fieldset>`;
   } else $('#options').innerHTML = `${extra}<fieldset><legend class="sr-only">${esc(cat.choose)}</legend>${cards.join('')}</fieldset>`;
   restorePanels();
 }
@@ -1638,7 +1644,8 @@ $('#options').addEventListener('change', e => {
   else if (t.name === 'gmount') { const wasRad = resolvedRadPos(sel); sel.gpuMount = t.value; rebuildScene(); refreshUI(); $(`#gmount-${t.value}`).focus();
     const nowRad = resolvedRadPos(sel), bad = evaluate(sel).find(c => c.cats.includes('gpu') && c.status === 'fail');
     announce(`Card mount: ${t.value}.${wasRad && nowRad !== wasRad ? ` The radiator moved to the ${nowRad}.` : ''}${bad ? ` Problem: ${bad.title}.` : ''}`); }
-  else if (t.name === 'radpos') { sel.radPos = t.value; rebuildScene(); refreshUI(); $(`#rad-${t.value}`).focus(); announce(`Radiator moved to the ${t.value}`); }
+  else if (t.name === 'radat') { sel.radAt = +t.value; rebuildScene(); refreshUI(); $(`#radat-${t.value}`).focus(); announce(`Radiator moved to the ${t.closest('label').textContent.trim().toLowerCase()} of the ${resolvedRadPos(sel)} mount`); }
+  else if (t.name === 'radpos') { sel.radAt = 0; sel.radPos = t.value; rebuildScene(); refreshUI(); $(`#rad-${t.value}`).focus(); announce(`Radiator moved to the ${t.value}`); }
 });
 
 /* ---------- sheet (phones and tablets) ---------- */
@@ -1650,7 +1657,7 @@ function setSheet(open, tab){
   if (sheet.dataset.open === 'true' && mode === 'config') $('#sheetToggle').setAttribute('aria-label', 'Close the build panel'); else $('#sheetToggle').removeAttribute('aria-label');
   requestAnimationFrame(measureSheet); syncGuideFull();
 }
-// Phones with the sheet open: the view becomes a 16:9 strip at the top and the sheet fills the rest, scrolling on its own.
+// Phones with the sheet open: the view becomes a short strip at the top and the sheet fills the rest, scrolling on its own.
 // Configure keeps its top bar over the strip; the guided build clears everything off the view.
 function syncGuideFull(){
   const strip = isMobile() && sheet.dataset.open === 'true', gf = strip && mode === 'guide';
@@ -1672,7 +1679,8 @@ function measureSheet(){
   app.style.setProperty('--sheet-h', h + 'px');
   updateViewOffset();
 }
-$('#sheetToggle').addEventListener('click', () => setSheet(sheet.dataset.open !== 'true'));
+// opening the sheet always starts from the build list (every part), not the last picker or tab
+$('#sheetToggle').addEventListener('click', () => { const open = sheet.dataset.open !== 'true'; if (open && mode === 'config') { if (pickOpen) closePicker(false); setSheet(true, 'a'); } else setSheet(open); });
 $('.sheet-tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setSheet(true, b.dataset.tab); });
 $('.sheet-tabs').addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const t = sheet.dataset.tab === 'a' ? 'b' : 'a'; setSheet(true, t); $('#stab-'+t).focus(); e.preventDefault(); } });
 new ResizeObserver(measureSheet).observe(sheet);
@@ -1962,7 +1970,7 @@ let preview = null;   // {cat, id, saved}: the build as it was before the previe
 function choosePart(cat, id){
   sel[cat] = id; sel.none = (sel.none || []).filter(k => k !== cat);
   if (cat === 'case' && !byId.cases[id].colors.includes(sel.finish)) sel.finish = byId.cases[id].colors[0];
-  if (cat === 'case') { sel.fanCfg = stockFanCfg(id); sel.psuFan = null; }
+  if (cat === 'case') { sel.fanCfg = fullFanCfg(id); sel.psuFan = null; }
   if (cat === 'cooler' || cat === 'case') sel.radPos = null;
 }
 function fitFanEverywhere(id){
@@ -2062,7 +2070,7 @@ function startOver(){
   if (soloKey) { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   closePicker(false);
   const s = JSON.parse(JSON.stringify(DEFAULT_SEL));
-  Object.assign(s, {none:BUILD_CATS.slice(), fanCfg:stockFanCfg(s.case), psuFan:null, radPos:null, pumpDir:null});
+  Object.assign(s, {none:BUILD_CATS.slice(), fanCfg:fullFanCfg(s.case), psuFan:null, radPos:null, radAt:0, pumpDir:null});
   Object.keys(sel).forEach(k => delete sel[k]); Object.assign(sel, normalizeEmpty(s));
   rebuildScene(); resetView(); refreshUI();
   announce('Every part removed. Your build is empty. Start with a case.');
@@ -2082,7 +2090,7 @@ $('#sobox') && $('#sobox').addEventListener('click', e => {
 
 /* save and share: the build lives in the page address (#b=...) and in this browser, so a reload or a shared link opens it */
 const DEFAULT_SEL = JSON.parse(JSON.stringify(sel));
-const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'hoseDir', 'fanCfg', 'none'];
+const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'radAt', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'hoseDir', 'fanCfg', 'none'];
 const b64u = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = t => decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))));
 // only what differs from the starting build goes in the link (the case always does), which keeps links short
@@ -2101,6 +2109,7 @@ function decodeBuild(code){
     ['radPos', 'pumpDir'].forEach(k => { if (o[k] === null || typeof o[k] === 'string') out[k] = o[k]; });
     if (['out', 'glass', 'a', 'b'].includes(o.hoseDir)) out.hoseDir = o.hoseDir;
     out.gpuMount = o.gpuMount === 'vertical' ? 'vertical' : 'horizontal';
+    out.radAt = Number.isInteger(o.radAt) && o.radAt >= 0 && o.radAt < 4 ? o.radAt : 0;
     if (o.psuFan === null || o.psuFan === 'up' || o.psuFan === 'down') out.psuFan = o.psuFan;
     if (typeof o.fans === 'string') out.fans = o.fans;
     out.none = Array.isArray(o.none) ? BUILD_CATS.filter(k => o.none.includes(k)) : [];
@@ -3656,7 +3665,7 @@ function buildCables(c, L, b, gpuG, psuG, sataG, H){
   const plug24 = [[p24[0], p24[1], bz + 40], [p24[0], p24[1], bz + 20]];
   if (sff) { const p = sock('atx24'), s = outOf(p); g24.add(cable([A(p), A(s), [s.x + 30, s.y - 6, bz + 40], [p24[0] - 24, p24[1] + 10, bz + 44]].concat(plug24), 4.5, RUN.atx24)); }   // SFX units ship flat ribbon cables
   else g24.add(cable(viaPsu('atx24', H.upper).concat(plug24), 6, RUN.atx24));
-  { const X24 = new THREE.Vector3(0, 1, 0), Y24 = new THREE.Vector3(-1, 0, 0), w = wiresOf('atx24', 'atx24', {x:X24, y:Y24});
+  { const X24 = new THREE.Vector3(0, 1, 0), Y24 = new THREE.Vector3(-1, 0, 0), w = wiresOf('atx24', 'atx24', {x:X24, y:Y24, back:new THREE.Vector3(p24[0], p24[1], bz + 4.2 + PLUG_FAM.mf.depth)});
     if (w) g24.children[g24.children.length - 1].userData.rope.o = Object.assign({}, g24.children[g24.children.length - 1].userData.rope.o, {wires:w});
     const box24 = plugAt([p24[0], p24[1], bz + 19], [12, F.p24[2] - F.p24[1] + 2, 12]); g24.add(box24);
     g24.add(cadPlug('mf2x12', new THREE.Vector3(p24[0], p24[1], bz + 4.2), X24, Y24, box24)); }
@@ -3677,7 +3686,7 @@ function buildCables(c, L, b, gpuG, psuG, sataG, H){
     else { const exs = (F.epsU || [F.eps[0], F.eps[0] + 22]).slice(0, second ? 2 : 1).map(u => rx - u), exMean = exs.reduce((a2, b2) => a2 + b2, 0) / exs.length, cut = (G.trayCuts || []).find(h => H.top.x > h.x0 && H.top.x < h.x1 && H.top.y > h.y0 && H.top.y < h.y1),
       tx = !second ? H.top.x - 16 : epsLanes(exs, cut, H.top.x - 7)[exs.indexOf(ex)]; /* a pair spreads across a small opening, or comes up under its plugs, never closer than two cable widths */ pts = fromPsu(k, tx, H.top.y).concat([[tx, H.top.y, L.tray - 4], [tx, H.top.y, L.tray + 6], [tx, H.top.y, bz + 22 + endPin]], end); }
     const four = i && (F.epsPins ? F.epsPins[i] === 4 : /8\+4/.test(b.cpuPower));
-    const Xe = new THREE.Vector3(1, 0, 0), Ye = new THREE.Vector3(0, 1, 0), we = wiresOf(k, four ? 'eps4' : 'eps', {x:Xe, y:Ye});
+    const Xe = new THREE.Vector3(1, 0, 0), Ye = new THREE.Vector3(0, 1, 0), we = wiresOf(k, four ? 'eps4' : 'eps', {x:Xe, y:Ye, back:new THREE.Vector3(ex, ey, bz + 4.2 + PLUG_FAM.mf.depth)});
     gEps.add(cable(pts, sff || four ? 3 : 4, Object.assign({}, RUN.eps, {endPin}, we ? {wires:we} : {})));
     const boxE = plugAt([ex, ey, bz + 18], [four ? 11 : 20, 11, 10]); gEps.add(boxE);
     gEps.add(cadPlug(four ? 'mf2x2' : 'eps44', new THREE.Vector3(ex, ey, bz + 4.2), Xe, Ye, boxE));
@@ -3695,8 +3704,10 @@ function buildCables(c, L, b, gpuG, psuG, sataG, H){
     const at = d => A(base.clone().addScaledVector(cd, d));
     const end = [at(6 + endPin + 10), at(6)], k = 'gpu' + i, x = base.x, gz = base.z + cd.z * (6 + endPin);
     let pts;
-    if (upG && !sff && (H.upper || H.lower)) { const top = base.y + cd.y * (6 + endPin), h = [H.upper, H.lower].filter(Boolean).sort((a2, b2) => Math.abs(a2.y - top - 20) - Math.abs(b2.y - top - 20))[0], e = entry(h);
-      pts = fromPsu(k, e[0] + off, e[1]).concat(thru(h, off), [[x, top + 26, base.z]], end); }
+    if (upG && !sff && (H.upper || H.lower)) { const top = base.y + cd.y * (6 + endPin), h0 = [H.upper, H.lower].filter(Boolean).sort((a2, b2) => Math.abs(a2.y - top - 20) - Math.abs(b2.y - top - 20))[0];
+      // through the same grommet as the 24-pin or USB runs, but 18 mm lower in it, so the held stretches never sit on each other
+      const ret = h0.plane === 'return', h = ret ? h0 : Object.assign({}, h0, {y:h0.y - 18}), e = entry(h);
+      pts = fromPsu(k, e[0] + (ret ? 0 : off), ret ? e[1] - 18 + off : e[1]).concat(thru(h, ret ? -18 + off : off), [[x, top + 26, base.z]], end); }
     else if (sff) { const p = sock(k), s = outOf(p), yy = Math.max(gc.y + 30, Math.min(s.y - 6, L.boardTop - F.pcie + 16)); pts = [A(p), A(s), [s.x, yy, gz], [x, yy, gz + 6]].concat(end); }
     else if (H.gpu.plane === 'shroud') { const h = H.gpu, p = sock(k), s = outOf(p);
       const yh = Math.max(s.y, L.shroudH - 14);
@@ -3711,11 +3722,11 @@ function buildCables(c, L, b, gpuG, psuG, sataG, H){
     Yg.addScaledVector(cd, -Yg.dot(cd)).addScaledVector(Xg, -Yg.dot(Xg)); if (Yg.lengthSq() < 0.05) Yg.crossVectors(cd, Xg); Yg.normalize();
     const ra = hpCard && CPx && CPx.hp.gpu === 'h12v2x6ra', gname = hpCard ? (ra ? 'h12v2x6ra' : 'h12v2x6') : 'pcie62', fam = PLUG_FAM[PLUG_KIND[gname][0]];
     const mateG = base.clone().addScaledVector(cd, -fam.datum + 0.5);
-    let ro = Object.assign({}, RUN.gpu, {endPin, endDir:cd.clone().negate()}), wg = wiresOf(k, hpCard ? 'hp' : 'pcie', {x:Xg, y:Yg});
+    let ro = Object.assign({}, RUN.gpu, {endPin, endDir:cd.clone().negate()}), wg = wiresOf(k, hpCard ? 'hp' : 'pcie', {x:Xg, y:Yg, back:mateG.clone().addScaledVector(cd, fam.depth)});
     if (ra) {   // a 90-degree head: the wires leave its end, along the card toward its bracket
       const head = mateG.clone().addScaledVector(cd, 8 + 6.75).addScaledVector(Xg, 10.25 + 4); pts = pts.slice(0, -2).concat([A(head.clone().addScaledVector(Xg, 40)), A(head)]);
       ro = Object.assign({}, RUN.gpu, {endPin:24, endDir:Xg.clone().negate()});
-      if (wg) { wg.frameB = {x:cd.clone(), y:Yg.clone()}; wg.b = wg.b.map(([u, v]) => [v * 0.7, -u * 0.55]); } }
+      if (wg) { wg.frameB = {x:cd.clone(), y:Yg.clone(), back:head.clone()}; wg.b = wg.b.map(([u, v]) => [v * 0.7, -u * 0.55]); } }
     gGpu.add(cable(pts, 5, Object.assign(ro, wg ? {wires:wg} : {})));
     gGpu.add(cadPlug(gname, mateG, Xg, Yg, pl));
   });
@@ -3747,7 +3758,7 @@ function buildCables(c, L, b, gpuG, psuG, sataG, H){
     // the SATA power plug on the drive (its long side along the drive's connector edge), wires leaving its back toward the PSU
     const Xs = new THREE.Vector3(0, 1, 0), Ys = new THREE.Vector3(0, 0, 1), Zs = new THREE.Vector3(1, 0, 0), mateS = new THREE.Vector3(sp.x, sp.y + 24, sp.z);
     const st0 = mateS.clone().addScaledVector(Zs, PLUG_FAM.sata.depth - 0.6);
-    let ws = wiresOf('sata', 'sata', {x:Xs, y:Ys});
+    let ws = wiresOf('sata', 'sata', {x:Xs, y:Ys, back:st0.clone()});
     if (ws) ws = Object.assign(ws, {a:ws.b, b:ws.a, frameA:ws.frameB, frameB:ws.frameA, fanA:ws.fanB, fanB:ws.fanA});   // this run is drawn from the drive to the PSU
     gSata.add(cable([A(st0), [st0.x + 10, st0.y, behind], [s.x, s.y, behind], A(s), A(p)], 2.5, Object.assign({endDir:nrm.clone().negate(), endPin:20, startDir:Zs.clone()}, RUN.sataPow, ws ? {wires:ws} : {})));
     gSata.add(plugCad('sata', mateS, Xs, Ys));
@@ -4169,12 +4180,21 @@ function airDir(m, d){
   const v = DIR[(f.in[0] === '+' ? 'p' : 'n') + f.in[1]].clone();
   return d === 'in' ? v : v.negate();
 }
-// Radiator on a fan mount: over the first n fan positions of its family, tubes at the lower or front end
-function radPlacement(pos, k, c, L){
+// Where along a mount a radiator can sit: one choice per run of n neighbouring fan positions (a 240 on a mount with three
+// 120 positions sits at either end). Returns the run count and a name for each (the end it sits toward).
+function radSpots(pos, k, c, L){
+  const m = L.geo.fans[pos]; if (!m || !k || k.type !== 'aio') return {n:1, names:[]};
+  const fam = k.radiatorSize % 140 === 0 && m.pos[140] ? 140 : 120, all = m.pos[fam] || m.pos[120], n = Math.max(1, Math.round(k.radiatorSize / fam));
+  const runs = Math.max(1, all.length - n + 1), nm = slotNames(pos, all.length, c);
+  return {n:runs, names:Array.from({length:runs}, (_, i) => i === 0 ? nm[0] : i === runs - 1 ? nm[all.length - 1] : 'Middle')};
+}
+// Radiator on a fan mount: over n neighbouring fan positions of its family (the first n unless the build moves it along), tubes at the lower or front end
+function radPlacement(pos, k, c, L, bs){
   const m = L.geo.fans[pos]; if (!m) return null;
   const len = k.radiatorDims.length, wd = k.radiatorDims.width, th = k.radiatorDims.thickness;
-  const fam = k.radiatorSize % 140 === 0 && m.pos[140] ? 140 : 120, n = Math.max(1, Math.round(k.radiatorSize / fam));
-  const list = (m.pos[fam] || m.pos[120]).slice(0, n).map(p => fanPoint(m, p, 0));
+  const fam = k.radiatorSize % 140 === 0 && m.pos[140] ? 140 : 120, n = Math.max(1, Math.round(k.radiatorSize / fam)), all = m.pos[fam] || m.pos[120];
+  const at = Math.max(0, Math.min(all.length - n, ((bs || sel).radAt | 0)));
+  const list = all.slice(at, at + n).map(p => fanPoint(m, p, 0));
   const ax = m.in[1], nI = 'xyz'.indexOf(ax), s = m.in[0] === '+' ? 1 : -1;
   const aI = 'xyz'.indexOf(ax === 'y' ? 'x' : ax === 'x' ? 'y' : (L.type === 'dual-chamber' ? 'y' : 'x')), oI = 3 - nI - aI;
   const ctr = [0,1,2].map(i => list.reduce((a, p) => a + p[i], 0) / list.length);
@@ -6901,6 +6921,7 @@ const ROPE_SOLIDS = ['case', 'glass', 'board', 'm2', 'ram', 'gpu', 'cooler', 'pu
 let _ropeSolid = null, ropeMs = 0, ropeSolidCross = [];
 let ropes = [], rw = null, ropeQuiet = 0, ropeAcc = 0, ropeSig = '', ropeLast = 0;
 const ropeKick = new THREE.Vector3();
+const ROPE_SWAY = false, ROPE_SETTLE = 300;   // cables hold still: no swing when the view turns, no visible settling (300 steps settle them to within a few mm)
 
 /* ----- the solid world: boxes in case coordinates, bucketed in a grid, plus the panels cables pass through ----- */
 function ropeBoxesOf(root, mode){
@@ -6953,7 +6974,8 @@ function ropeWorld(){
   const add = (list, tag) => list.forEach(b => { boxes.push(b); tags.push(tag); });
   const shown = k => scn[k] && (k === 'case' || k === 'glass' || isShown(scn[k]));
   ROPE_SOLIDS.forEach(k => { if (!shown(k)) return;
-    if (k === 'gpu' && scn.gpu.userData.upright) add(ropeBoxesOf(scn.gpu, 'union'), 'gpu');   // upright: one box from the socket to the top edge
+    if (k === 'gpu' && scn.gpu.userData.upright) { const bx = ropeBoxesOf(scn.gpu, 'union'), top = scn.gpu.position.y + byId.gpus[sel.gpu].height - 8;
+      bx.forEach(b => { b.max.y = Math.min(b.max.y, top); }); add(bx, 'gpu'); }   // upright: one box from the socket to just under the top edge, where the power plug sits
     else if (k === 'gpu') { const sz = L.boardZ + GPU_SEAT, all = ropeBoxesOf(scn.gpu).filter(b => b.max.z > sz + 0.3);
       // the card body is one box from its PCB edge out; the gold fingers and bracket tab that reach down into the slot get their own,
       // so the strip of board between the slot and the card's lower edge stays open to cables
@@ -7318,10 +7340,10 @@ function buildRopes(){
   ropeSolidCross = [];
   meshes.sort((a, b) => b.userData.rope.r - a.userData.rope.r).forEach(m => { let o = m; while (o && !o.userData.key) o = o.parent; ropeSolidCross.cur = o && o.userData.key; ropes.push(ropeFrom(m)); });
   ropeSig = ropeVisSig(); ropeLive();
-  // settle before the first frame; with reduced motion, settle completely so nothing moves on screen
-  const n = window.__ropeNoSettle ? 0 : reduceMotion ? 1600 : 120;
-  for (let i = 0; i < n; i++) { const m = ropeStep(RP.h); if (i % 20 === 19 && i < 100) ropes.forEach(ropeEase); if (reduceMotion && m < 0.002 && i > 120) break; }
-  ropes.forEach(ropeWrite); ropeQuiet = 0; ropeAcc = 0; ropeMs = performance.now() - t0;
+  // settle before the first frame, then hold still: cables never move on screen (no sway, no settling animation)
+  const n = window.__ropeNoSettle ? 0 : ROPE_SETTLE;
+  for (let i = 0; i < n; i++) { const m = ropeStep(RP.h); if (i % 20 === 19 && i < 100) ropes.forEach(ropeEase); if (m < 0.002 && i > 120) break; }
+  ropes.forEach(ropeWrite); ropeQuiet = ROPE_SWAY ? 0 : 91; ropeAcc = 0; ropeMs = performance.now() - t0;
 }
 function ropeLive(){ ropes.forEach(R => { R.live = isShown(R.mesh) && (!R.mesh.parent.userData.home || R.mesh.parent.position.equals(R.mesh.parent.userData.home)); }); }
 function ropesWake(){ ropeQuiet = 0; }
@@ -7332,17 +7354,20 @@ function stepRopes(dt){
   const sig = ropeVisSig();
   if (sig !== ropeSig) { ropeSig = sig; rw = ropeWorld(); ropes.forEach(R => { const s = new Set(); rw.tags.forEach((t, i) => { if (t !== 'plug') return; const b = rw.boxes[i].clone().expandByScalar(4), e0 = new THREE.Vector3(R.x[0], R.x[1], R.x[2]), e1 = new THREE.Vector3(R.x[R.n*3-3], R.x[R.n*3-2], R.x[R.n*3-1]); if (b.containsPoint(e0) || b.containsPoint(e1)) s.add(i); }); R.skip = s; }); ropeQuiet = 0; }
   ropeLive();
-  // turning the view swings the cables a little, as if the case had been turned
-  if (!reduceMotion && camMode !== 'roam') {
+  // (turning the view used to swing the cables; they now stay still)
+  if (ROPE_SWAY && !reduceMotion && camMode !== 'roam') {
     _sw.copy(camera.position).sub(controls.target); const az = Math.atan2(_sw.x, _sw.z), el = Math.atan2(_sw.y, Math.hypot(_sw.x, _sw.z));
     if (swayCam.az != null) { let d = az - swayCam.az; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; const de = el - swayCam.el;
       if (Math.abs(d) > 1e-4 || Math.abs(de) > 1e-4) { ropeKick.x += Math.max(-16, Math.min(16, d * 320)); ropeKick.z += Math.max(-9, Math.min(9, -d * 160)); ropeKick.y += Math.max(-7, Math.min(7, de * 120)); ropeQuiet = 0; } }
     swayCam.az = az; swayCam.el = el;
   }
-  if (anims.length) ropeQuiet = 0;
+  if (anims.length && ROPE_SWAY) ropeQuiet = 0;
   if (ropeQuiet > 90) return false;                 // asleep: everything at rest
   ropeAcc = Math.min(ropeAcc + dt, RP.h * 4);
   let moved = 0, stepped = false;
+  if (!ROPE_SWAY) {   // anything that disturbed the cables (a part shown or hidden) settles within this frame, so nothing is seen moving
+    for (let i = 0; i < ROPE_SETTLE; i++) { moved = ropeStep(RP.h); if (moved < 0.002 && i > 40) break; }
+    ropeAcc = 0; ropeQuiet = 91; ropes.forEach(R => { if (R.live) ropeWrite(R); }); renderer.shadowMap.needsUpdate = true; return true; }
   while (ropeAcc >= RP.h) { moved = Math.max(moved, ropeStep(RP.h)); ropeAcc -= RP.h; stepped = true; }
   if (!stepped) return false;
   if (moved < 0.003) ropeQuiet++; else ropeQuiet = 0;
@@ -7493,12 +7518,16 @@ function wiresWrite(R){
     tmp.crossVectors(t0, nv); BB[i*3] = tmp.x; BB[i*3+1] = tmp.y; BB[i*3+2] = tmp.z;
   }
   // each wire's centre: connector layout, run layout, connector layout
+  // where a run ends inside its plug, each wire is in its own cavity by the plug's back face and runs straight in from there
   const X = Wd.X, nw = Wd.nw, fA = S.fanA || 20, fB = S.fanB || 20;
+  const inset = (fr, i0, sgn) => { if (!fr || !fr.back) return 0; const o = i0 * 3; return Math.max(0, sgn * ((P[o] - fr.back.x) * T[o] + (P[o+1] - fr.back.y) * T[o+1] + (P[o+2] - fr.back.z) * T[o+2])); };
+  const inA = inset(S.frameA, 0, -1), inB = inset(S.frameB, M - 1, 1);
   for (let w = 0; w < nw; w++) { const a = S.a[w], r = S.run[w], b = S.b[w];
     for (let i = 0; i < M; i++) {
-      const u = ss(sA[i] / fA), v = ss((L - sA[i]) / fB);
+      const u = ss((sA[i] - inA) / fA), v = ss((L - sA[i] - inB) / fB);
       let ox = a[0] + (r[0] - a[0]) * u, oy = a[1] + (r[1] - a[1]) * u;
-      ox = flip * b[0] + (ox - flip * b[0]) * v; oy = flip * b[1] + (oy - flip * b[1]) * v;
+      // (arriving into a plug the frame's second axis runs opposite the plug's rows, so the row offset changes sign)
+      ox = flip * b[0] + (ox - flip * b[0]) * v; oy = -flip * b[1] + (oy + flip * b[1]) * v;
       const o = (w * M + i) * 3;
       X[o] = P[i*3] + NN[i*3] * ox + BB[i*3] * oy; X[o+1] = P[i*3+1] + NN[i*3+1] * ox + BB[i*3+1] * oy; X[o+2] = P[i*3+2] + NN[i*3+2] * ox + BB[i*3+2] * oy;
     } }

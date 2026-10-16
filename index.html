@@ -73,6 +73,10 @@ button{cursor:pointer}
 .modes button{border:0;background:transparent;border-radius:999px;padding:0 18px;height:40px;font-weight:600;color:var(--muted);transition:background .2s,color .2s}
 .modes button[aria-selected="true"]{background:var(--ink);color:var(--glass-strong);box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .actions{display:flex;gap:8px}
+.topbar .menubtn{display:none}
+.menubtn svg{width:20px;height:20px}
+.menubtn .i-close,.topbar.menu-open .menubtn .i-open{display:none}
+.topbar.menu-open .menubtn .i-close{display:block}
 .iconbtn{width:var(--bar-h);height:var(--bar-h);border-radius:999px;display:grid;place-items:center;border:1px solid var(--glass-edge)}
 .iconbtn svg{width:20px;height:20px}
 .iconbtn:hover{background:var(--glass-strong)}
@@ -585,11 +589,30 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .app.strip .sheet-toggle .grab{display:none}
   .app.guide-full .stage{height:var(--pv)}
   .app.guide-full .sheet{top:var(--pv)}
-  .app.guide-full .topbar,.app.guide-full .viewpop,.app.guide-full .airlegend,.app.guide-full .roamhint,.app.guide-full .solobar,
+  .app.guide-full .airlegend,.app.guide-full .roamhint,.app.guide-full .solobar,
   .app.guide-full #hotspots,.app.guide-full #fanspots,.app.guide-full #portspots,.app.guide-full #tags,.app.guide-full .crosshair{display:none!important}
-  .app.guide-full .sheet-body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
-  .app.guide-full .guidebar{bottom:calc(var(--gap) + env(safe-area-inset-bottom, 0px));justify-content:space-between;z-index:7}
-  .app.guide-full .guidebar .prog{display:none}
+  .app.guide-full .sheet-body{padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+  /* the guided build keeps every control in the sheet at the bottom: the step and part count on its handle, then the part's
+     words, its progress and Back / Replay / Next. The floating step bar is gone and the top bar folds into one menu button. */
+  .app[data-mode="guide"] .guidebar{display:none!important}
+  .app[data-mode="guide"] .guidehead .prog{display:none}
+  .app[data-mode="guide"] .sheet-head{gap:8px;padding:2px 14px 12px}
+  .app[data-mode="guide"] .sheet-toggle{min-height:44px;padding:4px 2px}
+  .sheet-toggle .sum .pt{color:var(--muted);font-weight:500;white-space:nowrap}
+  .sheet-toggle .sum .pt::before{content:"\00B7";margin-right:8px}
+  .ministep.inhead{position:static;transform:none;width:auto;margin:0;padding:0;gap:9px;background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .ministep.inhead::before{display:none}
+  .ministep.inhead .ms-num,.ministep.inhead .ms-count{display:none}
+  .ministep.inhead .ms-main{gap:9px}
+  .ministep.inhead .ms-text{margin:0;font-size:.95rem}
+  .ministep.inhead .ms-ctl .btn{min-height:44px}
+  .app[data-mode="config"] .ministep{display:none!important}
+  .app[data-mode="guide"] .topbar .menubtn{display:grid}
+  .app[data-mode="guide"] .topbar{left:auto;justify-content:flex-end}
+  .app[data-mode="guide"] .topbar:not(.menu-open) > :not(.menubtn){display:none!important}
+  .app[data-mode="guide"] .topbar.menu-open{flex-direction:column;align-items:flex-end;z-index:8}
+  .app[data-mode="guide"] .topbar.menu-open .menubtn{order:-1}
+  .app[data-mode="guide"] .topbar.menu-open .modemsg{display:none}
   /* the logo gives its place to the view and power buttons */
   .brand{display:none}
   .topbar{gap:8px}
@@ -638,7 +661,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   </div>
   <div class="solobar emptybar glass pill" id="emptyBar" role="region" aria-label="Empty build" hidden><span id="emptyText"></span><button type="button" class="btn small primary" id="emptyPick">Choose a case</button></div>
 
-  <header class="topbar">
+  <header class="topbar" id="topbar">
     <div class="brand glass pill">
       <span class="mark" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="1.8" width="10" height="12.4" rx="1.6"/><path d="M6 5.5h4M6 8h4M6 10.5h2"/></svg></span>
       <span class="name">Clearance</span><span class="tagline">PC build planner</span>
@@ -652,6 +675,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
       <button class="iconbtn glass" id="aboutBtn" aria-label="About Clearance" title="About"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg></button>
       <div class="bgwrap"><button class="iconbtn glass" id="bgBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="bgMenu" aria-label="Background" title="Background"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M3.5 17.5l5.2-5 3.8 3.6 2.6-2.4 5.4 4.6"/></svg></button><div class="bgmenu glass" id="bgMenu" role="menu" aria-labelledby="bgBtn" hidden></div></div>
     </div>
+    <button type="button" class="iconbtn glass menubtn" id="menuBtn" aria-expanded="false" aria-controls="topbar" aria-label="Menu: mode, view, power and settings" title="Menu"><svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </header>
 
   <section class="sheet glass" id="sheet" data-open="false" data-tab="a" aria-label="Build controls">
@@ -1632,7 +1656,7 @@ function renderSheetSummary(checks){
     // open on a phone, the summary row gives way to the tabs: the fit check tab carries the count
     const cnt = fails || warns;
     $('#stab-b').innerHTML = `Fit check${cnt ? `<span class="tabbadge ${fails ? 'fail' : 'warn'}" aria-hidden="true">${cnt}</span><span class="sr-only">, ${cnt} ${fails ? 'to fix' : 'to check'}</span>` : ''}`;
-  } else if (steps[stepIdx]) $('#sheetSum').innerHTML = `<span class="t">Step ${stepIdx+1} of ${steps.length}</span>`;
+  } else if (steps[stepIdx]) $('#sheetSum').innerHTML = guideSum();
 }
 function refreshUI(){
   const checks = evaluate(sel);
@@ -1711,6 +1735,20 @@ function placeDock(){
   else if (d.parentElement === tb) app.insertBefore(d, $('#viewPop'));
 }
 placeDock();
+// Phones in the guided build: the top bar folds into one menu button so the view keeps the room; it opens as a short column
+const topbar = $('#topbar'), menuBtn = $('#menuBtn');
+function setMenu(open, refocus){
+  topbar.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open);
+  if (!open && typeof closeBgMenu === 'function' && !$('#bgMenu').hidden) closeBgMenu(false);
+  if (refocus) menuBtn.focus();
+}
+menuBtn.addEventListener('click', () => setMenu(!topbar.classList.contains('menu-open')));
+document.addEventListener('pointerdown', e => { if (topbar.classList.contains('menu-open') && !topbar.contains(e.target)) setMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && topbar.classList.contains('menu-open') && $('#bgMenu').hidden) { setMenu(false, true); } });
+// the view options and About open on their own, so the menu steps aside for them
+['#viewBtn', '#aboutBtn'].forEach(q => $(q).addEventListener('click', () => { if (topbar.classList.contains('menu-open')) setMenu(false); }));
+// a control that folded away can't take the focus back, so the menu button does
+const focusShown = el => (el.offsetParent ? el : menuBtn.offsetParent ? menuBtn : el).focus();
 function measureSheet(){
   const h = isMobile() ? sheet.getBoundingClientRect().height : 0;
   app.style.setProperty('--sheet-h', h + 'px');
@@ -1816,8 +1854,9 @@ setBackground(BACKGROUNDS.some(b => b.id === savedBg) ? savedBg : 'light', false
 /* ---------- about ---------- */
 const about = $('#about');
 $('#aboutBtn').addEventListener('click', () => { if (about.showModal) about.showModal(); else about.setAttribute('open',''); });
-$('#aboutClose').addEventListener('click', () => { if (about.close) about.close(); else about.removeAttribute('open'); $('#aboutBtn').focus(); });
+$('#aboutClose').addEventListener('click', () => { if (about.close) about.close(); else about.removeAttribute('open'); focusShown($('#aboutBtn')); });
 about.addEventListener('click', e => { if (e.target === about && about.close) about.close(); });
+about.addEventListener('close', () => { if (document.activeElement === document.body || !$('#aboutBtn').offsetParent) focusShown($('#aboutBtn')); });
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || (about.open)) return;
@@ -2204,7 +2243,7 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.addEventListener('change', () => invalidate(false));
 controls.enableDamping = !reduceMotion; controls.dampingFactor = 0.08;
 controls.minDistance = 35; controls.maxDistance = 2800; controls.screenSpacePanning = true;
-controls.maxPolarAngle = Math.PI * 0.54;
+controls.maxPolarAngle = Math.PI;   // orbit all the way round, underneath included
 
 // Image-based lighting: a neutral studio with softboxes, so metal parts pick up believable reflections.
 (function(){
@@ -2691,10 +2730,11 @@ function buildRoom(id){
   plane(640, 440, flatMat({map: texFrom(artCanvas(P)), roughness: 0.7}), [60, 960, R.z0 + 2]);
   // desk: solid wood top on powder-coated steel legs
   const woodTex = texFrom(woodCanvas(2048, 600, Object.assign({seed: 23}, P.wood)));
-  box(D.x1 - D.x0, D.t, D.z1 - D.z0, flatMat({map: woodTex, roughness: 0.66}), [(D.x0 + D.x1) / 2, -D.t / 2, (D.z0 + D.z1) / 2]);
+  const deskParts = room.userData.desk = [];
+  deskParts[0] = box(D.x1 - D.x0, D.t, D.z1 - D.z0, flatMat({map: woodTex, roughness: 0.66}), [(D.x0 + D.x1) / 2, -D.t / 2, (D.z0 + D.z1) / 2]);
   const steel = flatMat({color: P.steel, roughness: 0.55, metalness: 0.45}), legH = -D.t - R.y0;
-  [[D.x0 + 50, D.z0 + 50], [D.x1 - 50, D.z0 + 50], [D.x0 + 50, D.z1 - 50], [D.x1 - 50, D.z1 - 50]].forEach(([lx, lz]) => box(44, legH, 44, steel, [lx, R.y0 + legH / 2, lz]));
-  [D.z0 + 50, D.z1 - 50].forEach(rz => box(D.x1 - D.x0 - 100, 60, 24, steel, [(D.x0 + D.x1) / 2, -D.t - 30, rz]));
+  [[D.x0 + 50, D.z0 + 50], [D.x1 - 50, D.z0 + 50], [D.x0 + 50, D.z1 - 50], [D.x1 - 50, D.z1 - 50]].forEach(([lx, lz]) => deskParts.push(box(44, legH, 44, steel, [lx, R.y0 + legH / 2, lz])));
+  [D.z0 + 50, D.z1 - 50].forEach(rz => deskParts.push(box(D.x1 - D.x0 - 100, 60, 24, steel, [(D.x0 + D.x1) / 2, -D.t - 30, rz])));
   // two 27-inch monitors, angled in slightly toward the chair
   const gear = flatMat({color: P.gear, roughness: 0.45, metalness: 0.35});
   if (!SCREEN_TEX.code) { SCREEN_TEX.code = texFrom(screenCanvas('code')); SCREEN_TEX.wall = texFrom(screenCanvas('wall')); }
@@ -2740,6 +2780,11 @@ function buildRoom(id){
   soft(20, 20, [0, -9.8, 0], [Math.PI / 2, 0, 0], E.floor);
   const pm = new THREE.PMREMGenerator(renderer), envTex = pm.fromScene(env, 0.02).texture; pm.dispose();
   return rooms[id] = {group: room, env: envTex, bulbAt, bedLampAt: furnished.bedLampAt};
+}
+// looking up from under the build: the desk would hide it, so the desk drops out while the camera is below its top
+function underView(){
+  const rm = rooms[document.documentElement.dataset.bg], d = rm && rm.group.visible && rm.group.userData.desk;
+  if (d) { const up = camera.position.y > 1; d.forEach(m => { m.visible = up; }); }
 }
 // keep the roam camera inside the room while a desk backdrop is showing
 function clampRoomCam(p){
@@ -7712,7 +7757,8 @@ let curInsets = {l:0, r:0, t:0, b:0};
 function measureInsets(){
   const W = stageEl.clientWidth, ins = {l:0, r:0, t:0, b:0};
   if (app.classList.contains('guide-full')) return ins;   // the view strip has nothing laid over it
-  ins.t = document.querySelector('.topbar').getBoundingClientRect().bottom;
+  // phones in the guided build: only the small menu button sits at the top, in a corner, so the build can use the full height
+  ins.t = isMobile() && mode === 'guide' ? 12 : document.querySelector('.topbar').getBoundingClientRect().bottom;
   const ms = document.getElementById('ministep');   // the step's part-by-part card over the top of the view
   if (ms && !ms.hidden && !ms.classList.contains('inline')) ins.t = Math.max(ins.t, ms.getBoundingClientRect().bottom - stageEl.getBoundingClientRect().top + 6);
   if (isMobile()) { ins.b = app.classList.contains('strip') ? 0 : sheet.getBoundingClientRect().height + 8; return ins; }
@@ -7967,6 +8013,7 @@ function tick(){
   if (camMode !== 'roam') controls.update();
   if (!dirty) return;
   dirty = false;
+  underView();
   renderer.render(scene, camera);
   placeOverlays();
 }
@@ -8277,7 +8324,7 @@ $('#viewPop').addEventListener('click', e => {
   announce(k.startsWith('xray') || k === 'cables' || k === 'markers' ? `${label} ${panels[k] ? 'on' : 'off'}` : `${label} ${panels[k] ? 'on' : 'removed'}`);
 });
 document.addEventListener('pointerdown', e => { const pop = $('#viewPop'); if (!pop.hidden && !pop.contains(e.target) && !$('#viewBtn').contains(e.target)) setViewOpen(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#viewPop').hidden) { setViewOpen(false); $('#viewBtn').focus(); e.stopPropagation(); } }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#viewPop').hidden) { setViewOpen(false); focusShown($('#viewBtn')); e.stopPropagation(); } }, true);
 let airTimer = null;
 function buildAirSoon(){ clearTimeout(airTimer); airTimer = setTimeout(() => { buildAir(); setAirVisible(); }, 30); }
 
@@ -8392,19 +8439,37 @@ function guideClear(){
 // the scene was rebuilt: the old timeline's parts and props are gone with it
 function guideDrop(){ GA.tl = null; GA.playing = false; }
 let _msKey = '';
-// on a phone with the sheet open the view is only a strip, so the card moves into the sheet, right under it
+// phones: the card lives in the bottom sheet's head, with the step count, so every guide control sits in one place at the bottom
 function placeMini(){
-  const el = document.getElementById('ministep'); if (!el) return; const inl = isMobile() && app.classList.contains('guide-full');
-  if (inl && el.parentNode !== $('#guideLeft')) { $('#guideLeft').prepend(el); el.classList.add('inline'); el.style.cssText = ''; _msKey = ''; }
-  else if (!inl && el.parentNode !== $('#tags').parentNode) { $('#tags').after(el); el.classList.remove('inline'); el.style.cssText = ''; _msKey = ''; }
+  const el = document.getElementById('ministep'); if (!el) return; const head = isMobile(), sh = document.querySelector('.sheet-head');
+  if (head && el.parentNode !== sh) { sh.append(el); el.classList.add('inline', 'inhead'); el.style.cssText = ''; _msKey = ''; }
+  else if (!head && el.parentNode !== $('#tags').parentNode) { $('#tags').after(el); el.classList.remove('inline', 'inhead'); el.style.cssText = ''; _msKey = ''; }
+}
+// the words on the sheet's handle: "Step 5 of 15 · Part 2 of 3"
+function guideSum(){
+  const tl = GA.tl, n = tl && tl.mini && steps[stepIdx] === tl.step ? tl.mini.length : 0;
+  return `<span class="t">Step ${stepIdx + 1} of ${steps.length}</span>` + (n > 1 ? `<span class="pt">Part ${Math.min(GA.mi || 0, n - 1) + 1} of ${n}</span>` : '');
 }
 function guideMiniUI(){
   const el = document.getElementById('ministep'); if (!el) return; placeMini();
   const tl = GA.tl, on = mode === 'guide' && tl && tl.mini && tl.mini.length && steps[stepIdx] === tl.step;
-  if (!on) { if (!el.hidden) { el.hidden = true; updateViewOffset(); } return; }
+  if (!on) {
+    // phones have no other step buttons, so a step without parts still gets the card: its title, Back and Next step
+    if (mode === 'guide' && isMobile() && steps[stepIdx]) {
+      const key = 'step:' + stepIdx; if (key === _msKey) return; _msKey = key; el.hidden = false;
+      const lastStep = stepIdx === steps.length - 1;
+      $('#msBar').innerHTML = ''; $('#msBar').hidden = true; $('#msText').textContent = steps[stepIdx].title; $('#msCount').textContent = '';
+      $('#msNext').querySelector('.l').textContent = lastStep ? 'Finish' : 'Next step';
+      $('#msNext').setAttribute('aria-label', lastStep ? 'Finish the guided build' : `Next step: ${steps[stepIdx + 1].title}`);
+      $('#msPrev').disabled = stepIdx === 0; $('#msPrev').setAttribute('aria-label', 'Back to the previous step'); $('#msReplay').hidden = true;
+      $('#sheetSum').innerHTML = guideSum(); return;
+    }
+    if (!el.hidden) { el.hidden = true; updateViewOffset(); } return;
+  }
   const n = tl.mini.length, i = Math.min(GA.mi || 0, n - 1), s = tl.step, key = s.key + ':' + i + ':' + n + ':' + stepIdx;
   if (key !== _msKey) {   // the part changed: its words, its number, the buttons
     _msKey = key; const wasHidden = el.hidden; el.hidden = false;
+    $('#msBar').hidden = false;
     $('#msBar').innerHTML = tl.mini.map(() => '<span><i></i></span>').join('');
     $('#msNum').textContent = i + 1; $('#msText').textContent = s.todo[i] || '';
     $('#msCount').textContent = `Part ${i + 1} of ${n}`;
@@ -8414,6 +8479,7 @@ function guideMiniUI(){
     $('#msPrev').disabled = i === 0 && stepIdx === 0;
     $('#msPrev').setAttribute('aria-label', i ? `Back to part ${i}` : 'Back to the previous step');
     $('#msReplay').hidden = reduceMotion || tl.mini[i][1] <= tl.mini[i][0];
+    if (isMobile()) $('#sheetSum').innerHTML = guideSum();
     document.querySelectorAll('#stepcard .todo > li').forEach((li, k) => li.classList.toggle('playing', k === i));
     if (wasHidden || el._h !== el.offsetHeight) { el._h = el.offsetHeight; updateViewOffset(); }
   }
@@ -9413,6 +9479,7 @@ function setMode(m){
   if (preview && m !== 'config') dropPreview();
   if (soloKey && m !== 'config') { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   mode = m; const cfg = m === 'config';
+  setMenu(false);
   app.dataset.mode = m;
   $('#tab-config').setAttribute('aria-selected', cfg); $('#tab-guide').setAttribute('aria-selected', !cfg);
   $('#tab-config').tabIndex = cfg ? 0 : -1; $('#tab-guide').tabIndex = cfg ? -1 : 0;

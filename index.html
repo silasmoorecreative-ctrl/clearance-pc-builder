@@ -156,8 +156,8 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 .guidefoot{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
 .guidefoot #next{flex:1}
 .app[data-mode="guide"] .panel-right{display:none!important}
-.stepmini{display:none}
-@media (min-width:1024px){.stepmini{display:flex;padding:2px 0 0;margin:0 -8px}.allsteps[open] + .stepmini{display:none}}
+#stepmini.stepmini{display:none}
+@media (min-width:1024px){#stepmini.stepmini{display:flex;padding:2px 0 0;margin:0 -8px}.allsteps[open] + #stepmini.stepmini{display:none}}
 @media (prefers-reduced-motion: reduce){.allsteps summary::after{transition:none}}
 .collapsebtn{flex:none;width:32px;height:32px;border-radius:999px;border:1px solid var(--line-strong);background:var(--raised);display:grid;place-items:center;color:var(--ink);cursor:pointer}
 .collapsebtn svg{width:16px;height:16px;transition:transform .2s}
@@ -397,7 +397,7 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .movegroup[hidden]{display:none}
 .guidebar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--gap) + env(safe-area-inset-bottom, 0px));display:flex;gap:10px;align-items:center;padding:7px;z-index:4;width:min(520px, calc(100% - 2*var(--gap)))}
 .guidebar .prog{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;padding:0 6px}
-.guidebar .prog b{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.guidebar .prog b{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 .guidebar .track{height:4px;border-radius:2px;background:var(--line-strong);overflow:hidden}
 .guidebar .track span{display:block;height:100%;background:var(--accent);transition:width .35s}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line-strong);background:var(--raised);font-weight:600;white-space:nowrap}
@@ -477,16 +477,29 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .tag{position:absolute;transform:translate(-50%,-100%);background:var(--ink);color:var(--glass-strong);font-size:.78rem;font-weight:600;padding:5px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;box-shadow:0 6px 16px -4px rgba(0,0,0,.35);margin-top:-10px}
 .tag::after{content:"";position:absolute;left:50%;bottom:-4px;width:8px;height:8px;background:inherit;transform:translateX(-50%) rotate(45deg);border-radius:2px}
 .tag.bad{background:var(--bad);color:#fff}
-/* guided motion: the checklist item being shown, and its words over the view */
-.animcap{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:3;display:flex;gap:9px;align-items:flex-start;max-width:min(560px, calc(100% - 32px));padding:8px 13px 8px 9px;border-radius:12px;background:var(--ink);color:var(--glass-strong);font-size:.86rem;font-weight:600;line-height:1.35;pointer-events:none;box-shadow:0 8px 22px -6px rgba(0,0,0,.4)}
-.animcap .n{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--font-mono);font-size:.74rem}
+/* guided motion: the part of the step being shown, with its words and controls, on the 3D view (in the sheet, under the
+   view strip, when a phone's sheet is open) */
+.ministep{position:absolute;z-index:4;left:50%;top:12px;transform:translateX(-50%);width:min(600px, calc(100% - 24px));padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;pointer-events:auto;border-radius:16px}
+.ministep.inline{position:relative;left:auto;top:auto;transform:none;width:auto;margin:12px 16px 0;border-radius:14px;box-shadow:none}
+.ms-bar{display:flex;gap:4px}
+.ms-bar span{flex:1;height:6px;border-radius:3px;background:var(--line-strong);overflow:hidden}
+.ms-bar i{display:block;height:100%;width:0;background:var(--accent)}
+.ms-main{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap}
+.ms-num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--font-mono);font-size:.82rem;font-weight:600}
+.ms-body{flex:1 1 240px;min-width:0}
+.ms-count{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ms-text{margin:1px 0 0;font-size:.98rem;font-weight:600;line-height:1.35}
+.ms-ctl{display:flex;gap:6px;margin-left:auto}
+.ms-ctl .btn{min-height:40px;padding:0 12px}
+@media (max-width:1023px){.app[data-mode="guide"] .sheet-toggle .sum{justify-content:center;padding-left:20px}.ministep{padding:8px 10px 10px;gap:7px}.ms-text{font-size:.9rem}.ms-ctl{width:100%}.ms-ctl #msNext{flex:1}.ms-ctl #msReplay .l{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
+@media (forced-colors: active){.ms-bar span{border:1px solid CanvasText}.ms-bar i{background:Highlight}}
 .todo > li{display:flex;gap:6px;align-items:stretch}
 .todo > li > label{flex:1}
 .showme{flex:none;display:grid;place-items:center;width:38px;min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--raised);color:var(--accent);cursor:pointer}
 .showme:hover{border-color:var(--line-strong)}
 .todo > li.playing > label{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--accent-soft)}
 .todo > li.playing > .showme{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-@media (forced-colors: active){.todo > li.playing > label{outline:3px solid Highlight}.animcap{border:1px solid CanvasText}}
+@media (forced-colors: active){.todo > li.playing > label{outline:3px solid Highlight}}
 
 /* ---------- dialog ---------- */
 dialog.about{max-width:min(560px, calc(100% - 32px));padding:0;color:var(--ink);background:var(--glass-strong)}
@@ -611,7 +624,18 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   <div class="overlay" id="portspots" role="group" aria-label="Connectors on the motherboard. Zoom in close to the board to show them"></div>
   <div class="solobar glass pill" id="soloBar" role="region" aria-label="Part view" hidden><span id="soloText"></span><button type="button" class="btn small primary" id="soloAdd" hidden>Add to build</button><button type="button" class="btn small" id="soloExit">Show the whole build</button></div>
   <div class="overlay" id="tags" aria-hidden="true"></div>
-  <div class="animcap" id="animcap" aria-hidden="true" hidden></div>
+  <div class="ministep glass" id="ministep" role="group" aria-label="This step, one part at a time" hidden>
+    <div class="ms-bar" id="msBar" role="progressbar" aria-label="Progress through this step" aria-valuemin="1"></div>
+    <div class="ms-main">
+      <span class="ms-num" id="msNum" aria-hidden="true">1</span>
+      <div class="ms-body"><span class="ms-count" id="msCount"></span><p class="ms-text" id="msText" aria-live="polite"></p></div>
+      <div class="ms-ctl">
+        <button type="button" class="btn small" id="msPrev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="l">Back</span></button>
+        <button type="button" class="btn small" id="msReplay" aria-label="Replay this part"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a6 6 0 1 0 2-4.5"/><path d="M4 3v3.5h3.5"/></svg><span class="l">Replay</span></button>
+        <button type="button" class="btn small primary" id="msNext"><span class="l">Next</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </div>
   <div class="solobar emptybar glass pill" id="emptyBar" role="region" aria-label="Empty build" hidden><span id="emptyText"></span><button type="button" class="btn small primary" id="emptyPick">Choose a case</button></div>
 
   <header class="topbar">
@@ -1608,7 +1632,7 @@ function renderSheetSummary(checks){
     // open on a phone, the summary row gives way to the tabs: the fit check tab carries the count
     const cnt = fails || warns;
     $('#stab-b').innerHTML = `Fit check${cnt ? `<span class="tabbadge ${fails ? 'fail' : 'warn'}" aria-hidden="true">${cnt}</span><span class="sr-only">, ${cnt} ${fails ? 'to fix' : 'to check'}</span>` : ''}`;
-  } else if (steps[stepIdx]) $('#sheetSum').innerHTML = `<span class="t">Step ${stepIdx+1}: ${esc(steps[stepIdx].title)}</span>`;
+  } else if (steps[stepIdx]) $('#sheetSum').innerHTML = `<span class="t">Step ${stepIdx+1} of ${steps.length}</span>`;
 }
 function refreshUI(){
   const checks = evaluate(sel);
@@ -1675,7 +1699,7 @@ function setSheet(open, tab){
 function syncGuideFull(){
   const strip = isMobile() && sheet.dataset.open === 'true', gf = strip && mode === 'guide';
   if (app.classList.contains('strip') === strip && app.classList.contains('guide-full') === gf) return;
-  app.classList.toggle('strip', strip); app.classList.toggle('guide-full', gf);
+  app.classList.toggle('strip', strip); app.classList.toggle('guide-full', gf); if (typeof placeMini === 'function') placeMini();
   if (gf) setViewOpen(false);
   requestAnimationFrame(() => { if (typeof resize === 'function') resize(); measureSheet();
     if (mode === 'guide') { if (typeof frameStep === 'function') frameStep(); } else if (typeof resetView === 'function' && sceneReady) resetView(); });
@@ -7689,6 +7713,8 @@ function measureInsets(){
   const W = stageEl.clientWidth, ins = {l:0, r:0, t:0, b:0};
   if (app.classList.contains('guide-full')) return ins;   // the view strip has nothing laid over it
   ins.t = document.querySelector('.topbar').getBoundingClientRect().bottom;
+  const ms = document.getElementById('ministep');   // the step's part-by-part card over the top of the view
+  if (ms && !ms.hidden && !ms.classList.contains('inline')) ins.t = Math.max(ins.t, ms.getBoundingClientRect().bottom - stageEl.getBoundingClientRect().top + 6);
   if (isMobile()) { ins.b = app.classList.contains('strip') ? 0 : sheet.getBoundingClientRect().height + 8; return ins; }
   const pl = $('#panelL').getBoundingClientRect(); ins.l = pl.right;
   if (pickOpen) { const pp = $('#panelPick').getBoundingClientRect(); if (pp.width) ins.l = Math.max(ins.l, pp.right); }
@@ -7894,7 +7920,8 @@ function placeOverlays(){
     el.style.display = ''; el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px';
   });
   placePortSpots(r, blocked);
-  const cap = document.getElementById('animcap'); if (cap && !cap.hidden) { cap.style.left = (curInsets.l + (r.width - curInsets.l - curInsets.r) / 2) + 'px'; cap.style.top = (curInsets.t + 12) + 'px'; }
+  const ms = document.getElementById('ministep'); if (ms && !ms.hidden && !ms.classList.contains('inline')) { const tb = document.querySelector('.topbar').getBoundingClientRect();
+    ms.style.left = (curInsets.l + (r.width - curInsets.l - curInsets.r) / 2) + 'px'; ms.style.top = ((tb.bottom > 0 ? tb.bottom - r.top : 0) + 10) + 'px'; ms.style.width = Math.min(600, r.width - curInsets.l - curInsets.r - 24) + 'px'; }
   fanSpots.forEach((f, k) => {
     const el = document.getElementById('fs'+k); if (!el) return;
     rig.localToWorld(_v.copy(f.p)); const p = toScreen(_v, r);
@@ -8283,7 +8310,7 @@ function runTweens(now){
     const t = Math.min(1, (now - tw.t0) / tw.dur); tw.fn(ease(t)); if (t >= 1) tweens.splice(i, 1); }
   let moving = tweens.length > 0;
   if (GA.playing && GA.tl) { let T = GA.from + (now - GA.wall) / 1000 * GA.speed; if (T >= GA.to) { T = GA.to; GA.playing = false; }
-    GA.T = T; tlSeek(GA.tl, T); guidePhaseUI(); moving = true; }
+    GA.T = T; tlSeek(GA.tl, T); if (GA.full) GA.mi = miniAt(T); guideMiniUI(); moving = true; }
   return moving;
 }
 const gV = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -8325,41 +8352,77 @@ function tlSeek(tl, T){
   invalidate(false); renderer.shadowMap.needsUpdate = true;
 }
 
-/* ----- playing it ----- */
+/* ----- playing it, part by part ----- */
+// Each checklist item is a part of the step: its stretch of the timeline plays, then the view waits on it. The part's words,
+// a progress bar with one segment per part, and Back / Replay / Next sit on the 3D view, next to what they describe.
 function guideStart(s, play){
   guideClear(); if (!s || !scn.board) return;
   const tl = TL(s); GA.tl = tl;
   try { const f = SEQ[s.key]; if (f) f(tl, s); parkSetup(tl, s); drvFinish(tl); }
   catch (e) { console.warn('guide motion', s.key, e); }
   if (tl.still == null) tl.still = tl.end;
-  if (play && !reduceMotion && tl.end > 0) guidePlay(0, tl.end);
-  else { GA.T = tl.still; tlSeek(tl, GA.T); guidePhaseUI(); }
+  // the parts' stretches, back to back: each runs from where the one before ended to the end of its own motion
+  const n = s.todo.length, r = []; let e = 0;
+  for (let i = 0; i < n; i++) { const ps = tl.ph.filter(q => q.item === i), s0 = e; if (ps.length) e = Math.max(e, ...ps.map(q => q.t1)); r.push([s0, e]); }
+  if (r.length) r[r.length - 1][1] = Math.max(r[r.length - 1][1], tl.end);
+  tl.mini = r;
+  miniGo(0, play);
 }
 function guidePlay(t0, t1){
-  const tl = GA.tl; if (!tl || reduceMotion) return;
-  GA.from = t0; GA.to = t1; GA.wall = performance.now(); GA.playing = true; GA.T = t0; tlSeek(tl, t0); GA.ph = -2; guidePhaseUI(); dirty = true;
+  const tl = GA.tl; if (!tl) return;
+  if (reduceMotion || t1 <= t0) { GA.playing = false; GA.T = t1; tlSeek(tl, t1); guideMiniUI(); return; }
+  GA.from = t0; GA.to = t1; GA.wall = performance.now(); GA.playing = true; GA.T = t0; tlSeek(tl, t0); guideMiniUI(); dirty = true;
 }
-// "Show me" on one checklist item: just its stretch of the step
-function guideShow(item){ const tl = GA.tl; if (!tl) return; const ps = tl.ph.filter(p => p.item === item); if (!ps.length) return;
-  guidePlay(Math.max(0, Math.min(...ps.map(p => p.t0)) - 0.15), Math.max(...ps.map(p => p.t1))); }
+// go to part i: play its stretch (or, if asked not to play, show where it ends)
+function miniGo(i, play){
+  const tl = GA.tl; if (!tl || !tl.mini || !tl.mini.length) { guideMiniUI(); return; }
+  GA.mi = Math.max(0, Math.min(tl.mini.length - 1, i)); GA.full = false; const [a, b] = tl.mini[GA.mi];
+  if (play === false) { GA.playing = false; GA.T = b; tlSeek(tl, b); guideMiniUI(); } else guidePlay(a, b);
+}
+// the whole step from the top, the parts following along
+function guideReplayAll(){ const tl = GA.tl; if (!tl || !tl.mini) return; GA.mi = 0; GA.full = true; guidePlay(0, tl.mini[tl.mini.length - 1][1]); }
+const miniAt = T => { const r = GA.tl && GA.tl.mini; if (!r) return 0; let k = 0; r.forEach(([a, b], i) => { if (T >= a && (b > a || T >= b)) k = i; }); return k; };
 const guideHas = item => !!(GA.tl && GA.tl.ph.some(p => p.item === item));
+const guideShow = item => miniGo(item);
 function guideClear(){
-  const tl = GA.tl; GA.playing = false; if (!tl) { guidePhaseUI(); return; }
+  const tl = GA.tl; GA.playing = false; if (!tl) return;
   tlRestore(tl); [tl.rigG, tl.asmG].concat(tl.extra).forEach(g => { if (g.parent) g.parent.remove(g); disposeTree(g); });
-  GA.tl = null; GA.ph = -2; guidePhaseUI();
+  GA.tl = null;
 }
 // the scene was rebuilt: the old timeline's parts and props are gone with it
-function guideDrop(){ GA.tl = null; GA.playing = false; GA.ph = -2; }
-// while a stretch plays, its checklist item is marked and its words show over the view
-function guidePhaseUI(){
-  const tl = GA.tl; let p = null;
-  if ((GA.playing || GA.hold) && tl) for (const q of tl.ph) if (GA.T >= q.t0 - 0.01 && (!p || q.t0 >= p.t0)) p = q;
-  const item = p ? p.item : -1; if (item === GA.ph) return; GA.ph = item;
-  document.querySelectorAll('#stepcard .todo > li').forEach((li, i) => li.classList.toggle('playing', i === item));
-  const cap = document.getElementById('animcap'); if (!cap) return;
-  if (item < 0 || !tl.step.todo[item]) { cap.hidden = true; return; }
-  cap.hidden = false; cap.innerHTML = `<span class="n">${item + 1}</span><span>${esc(tl.step.todo[item])}</span>`;
+function guideDrop(){ GA.tl = null; GA.playing = false; }
+let _msKey = '';
+// on a phone with the sheet open the view is only a strip, so the card moves into the sheet, right under it
+function placeMini(){
+  const el = document.getElementById('ministep'); if (!el) return; const inl = isMobile() && app.classList.contains('guide-full');
+  if (inl && el.parentNode !== $('#guideLeft')) { $('#guideLeft').prepend(el); el.classList.add('inline'); el.style.cssText = ''; _msKey = ''; }
+  else if (!inl && el.parentNode !== $('#tags').parentNode) { $('#tags').after(el); el.classList.remove('inline'); el.style.cssText = ''; _msKey = ''; }
 }
+function guideMiniUI(){
+  const el = document.getElementById('ministep'); if (!el) return; placeMini();
+  const tl = GA.tl, on = mode === 'guide' && tl && tl.mini && tl.mini.length && steps[stepIdx] === tl.step;
+  if (!on) { if (!el.hidden) { el.hidden = true; updateViewOffset(); } return; }
+  const n = tl.mini.length, i = Math.min(GA.mi || 0, n - 1), s = tl.step, key = s.key + ':' + i + ':' + n + ':' + stepIdx;
+  if (key !== _msKey) {   // the part changed: its words, its number, the buttons
+    _msKey = key; const wasHidden = el.hidden; el.hidden = false;
+    $('#msBar').innerHTML = tl.mini.map(() => '<span><i></i></span>').join('');
+    $('#msNum').textContent = i + 1; $('#msText').textContent = s.todo[i] || '';
+    $('#msCount').textContent = `Part ${i + 1} of ${n}`;
+    const last = i === n - 1, lastStep = stepIdx === steps.length - 1;
+    $('#msNext').querySelector('.l').textContent = last ? (lastStep ? 'Finish' : 'Next step') : 'Next';
+    $('#msNext').setAttribute('aria-label', last ? (lastStep ? 'Finish the guided build' : `Next step: ${steps[stepIdx + 1].title}`) : `Next part: ${s.todo[i + 1]}`);
+    $('#msPrev').disabled = i === 0 && stepIdx === 0;
+    $('#msPrev').setAttribute('aria-label', i ? `Back to part ${i}` : 'Back to the previous step');
+    $('#msReplay').hidden = reduceMotion || tl.mini[i][1] <= tl.mini[i][0];
+    document.querySelectorAll('#stepcard .todo > li').forEach((li, k) => li.classList.toggle('playing', k === i));
+    if (wasHidden || el._h !== el.offsetHeight) { el._h = el.offsetHeight; updateViewOffset(); }
+  }
+  // how far through each part: the ones before are full, this one fills as it plays
+  const segs = el.querySelectorAll('#msBar i');
+  tl.mini.forEach(([a, b], k) => { const f = k < i ? 1 : k > i ? 0 : (b > a ? Math.max(0, Math.min(1, (GA.T - a) / (b - a))) : 1); if (segs[k]) segs[k].style.width = (f * 100).toFixed(1) + '%'; });
+  const bar = $('#msBar'); bar.setAttribute('aria-valuenow', i + 1); bar.setAttribute('aria-valuemax', n); bar.setAttribute('aria-valuetext', `Part ${i + 1} of ${n}`);
+}
+const guidePhaseUI = guideMiniUI;
 function resetMotion(){
   tweens.length = 0;
   if (GA.tl) tlRestore(GA.tl);
@@ -8435,14 +8498,15 @@ function driverMesh(){
 // pts: [{p, d}] where p is where the head seats and d points into the part. Returns when the last one is done.
 // The screwdriver never jumps: it comes in from away from the part, travels between screws at an unhurried pace (later
 // screws wait for it), and backs away when it's done.
-const DRV_SPEED = 60, PLUNGE = 0.6;   // PLUNGE: seconds to come down onto a screw head (and back off it)   // mm per timeline second while it moves between screws
+const DRV_SPEED = 100, PLUNGE = 0.45;   // PLUNGE: seconds to come down onto a screw head (and back off it)   // mm per timeline second while it moves between screws
 function screws(tl, parent, pts, t, o){
   o = o || {}; const dur = o.dur || 0.5, gap = o.gap != null ? o.gap : 0.14, travel = o.travel || 7, turns = o.turns || 3, out = !!o.out;
-  const quick = o.quick != null ? o.quick : 99;
+  // the screwdriver shows how on the first screw of a set; the rest then turn in by themselves, a moment apart
+  const quick = o.noScrew ? 99 : Math.min(o.quick != null ? o.quick : 1, 1); let tEnd = t;
   const key = parent.uuid; let D = tl.drv[key];
   if (!D) { const m = driverMesh(); parent.add(m); m.visible = false; D = tl.drv[key] = {m, P:[], Q:[], V:[[0, false]], S:[], ang:0, last:null}; }
   pts.forEach((s, j) => {
-    const tool = o.tool !== false && j < quick, d = s.d.clone().normalize(), du = tool ? dur : Math.min(dur, 0.22), q = qUp(d.clone().negate());
+    const tool = o.tool !== false && j < quick, d = s.d.clone().normalize(), du = tool ? dur : 0.5, q = qUp(d.clone().negate());
     const seated = s.p.clone(), away = s.p.clone().addScaledVector(d, -travel), a = out ? seated : away, b = out ? away : seated;
     const tip = v => v.clone().addScaledVector(d, -2.4), lift = v => tip(v).addScaledVector(d, -26);
     if (tool) {
@@ -8464,9 +8528,9 @@ function screws(tl, parent, pts, t, o){
       kVis(tl, sc, out ? [[0, true], [t + du + 0.15, false]] : [[0, false], [t - 0.02, true]]);
       kPos(tl, sc, [[t, a.clone()], [t + du, b.clone(), 'lin']]);
       const spin = sc.userData.spin, sg = out ? -1 : 1; kNum(tl, v => { spin.rotation.y = v; }, [[t, 0], [t + du, sg * turns * Math.PI * 2, 'lin']]); }
-    t += du + (tool ? gap + PLUNGE : 0.08);
+    if (tool) { t += du + gap + PLUNGE; tEnd = Math.max(tEnd, t); } else { tEnd = Math.max(tEnd, t + du); t += 0.16; }
   });
-  return t;
+  return Math.max(t, tEnd);
 }
 // the screwdriver's keys, gathered while the steps were laid out; at the end it backs away and goes
 function drvFinish(tl){
@@ -8689,7 +8753,7 @@ SEQ.cooler = (tl, s) => {
   phase(tl, todoIx(s, /film/), t, t + 1.15);
   // tightened a few turns at a time, side to side
   const sides = [[su - 27, sv], [su + 27, sv]].map(([u, v]) => ({p:asmAt(u, v, 24), d:gV(0, 0, -1)}));
-  const t2 = screws(tl, tl.asmG, [sides[0], sides[1], sides[0], sides[1]], t + 2.35, {noScrew:true, dur:0.35, gap:0.04, turns:2});
+  const t2 = screws(tl, tl.asmG, [sides[0], sides[1]], t + 2.35, {noScrew:true, dur:0.35, gap:0.04, turns:2});
   phase(tl, todoIx(s, /^Set the cooler on/), t + 1.2, t2);
   const kb = boxIn(k, assembly);
   arrow(tl, tl.asmG, gV(kb.max.x + 6, (kb.min.y + kb.max.y) / 2, (kb.min.z + kb.max.z) / 2), gV(1, 0, 0), 70, t2 + 0.1);
@@ -8815,7 +8879,7 @@ SEQ.pump = (tl, s) => {
   phase(tl, 1, t1, t3);
   // screwed down evenly, diagonal corners in turn
   const nuts = holes.map(([uu, vv]) => ({p:asmAt(uu, vv, 17), d:gV(0, 0, -1)}));
-  const t5 = screws(tl, tl.asmG, nuts.concat(nuts), t4 + 0.15, {noScrew:true, dur:0.32, gap:0.05, turns:2});
+  const t5 = screws(tl, tl.asmG, nuts, t4 + 0.15, {noScrew:true, dur:0.32, gap:0.05, turns:2});
   phase(tl, 2, t3, t5);
   const An = scn.anchors; let t6 = t5 + 0.1;
   if (An.pump) ring(tl, tl.asmG, An.pump.position.clone(), t6, t6 + 1.1, 14); if (An.cpufan) ring(tl, tl.asmG, An.cpufan.position.clone(), t6 + 0.3, t6 + 1.1, 14);
@@ -9249,7 +9313,7 @@ function renderGuide(){
   const s = steps[stepIdx], done = doneOf(s);
   const pct = ((stepIdx+1)/steps.length*100) + '%';
   $('#progfill').style.width = pct; $('#progfillM').style.width = pct;
-  $('#progLabel').textContent = `Step ${stepIdx+1} of ${steps.length}`; $('#progLabelM').textContent = `Step ${stepIdx+1} of ${steps.length} · ${s.title}`;
+  $('#progLabel').textContent = `Step ${stepIdx+1} of ${steps.length}`; $('#progLabelM').textContent = `Step ${stepIdx+1} of ${steps.length}`;
   $('#stepsDone').textContent = `${steps.filter(stepComplete).length} of ${steps.length} done`;
   const fails = evaluate(sel).filter(c => c.status === 'fail');
   const notice = fails.length ? `<p class="notice" role="note"><strong>${fails.length} fit problem${fails.length>1?'s':''}.</strong> This build won't go together as configured: ${esc(fails.map(f=>f.title.toLowerCase()).join('; '))}. <button type="button" class="linkbtn" id="fixit">Fix it in Configure</button></p>` : '';
@@ -9269,6 +9333,7 @@ function renderGuide(){
   ['#prev', '#prevM'].forEach(q => $(q).disabled = stepIdx === 0);
   ['#next', '#nextM'].forEach(q => { $(q).textContent = stepIdx === steps.length-1 ? 'Finish' : 'Next step'; $(q).classList.toggle('ready', stepComplete(s)); });
   renderSheetSummary(evaluate(sel));
+  _msKey = ''; guideMiniUI();   // the checklist was redrawn: mark the part being shown again
 }
 function renderStepList(){
   const item = (t, i) => { const ok = stepComplete(t);
@@ -9285,7 +9350,7 @@ function goStep(i, focusTitle){
   ['board','cpu','paste','ram','m2','cooler','pump','radiator','gpu','psu','sata','fans-stock','fans-extra','cable-24','cable-eps','cable-gpu','cable-front','cable-sata','case'].forEach(k => scn[k] && tint(scn[k], new THREE.Color(0), 0));
   guideClear(); applyVisibility();
   const s = steps[stepIdx];
-  guideStart(s, stepIdx === prev + 1);   // moving on by one step plays it; jumping shows its still frame
+  guideStart(s, true);   // every step starts by playing its first part
   setTimeout(frameStep, 0);
   renderGuide(); updateOverlays(); updateSceneDesc();
   $('#guideScroll').scrollTop = 0;
@@ -9319,8 +9384,8 @@ function frameStep(){
 $('#stepcard').addEventListener('click', e => {
   if (e.target.id === 'fixit') { const f = evaluate(sel).find(c=>c.status==='fail'); setMode('config'); openPicker((f && f.cats.find(c=>c!=='case')) || 'case', true); }
   else if (e.target.closest('#resumeBtn')) { const n = resumeOffer; resumeOffer = 0; goStep(n, true); }
-  else if (e.target.closest('#replay')) { if (GA.tl) guidePlay(0, GA.tl.end); announce('Replaying the step'); }
-  else if (e.target.closest('[data-show]')) { const i = +e.target.closest('[data-show]').dataset.show; guideShow(i); announce(`Showing: ${steps[stepIdx].todo[i]}`); }
+  else if (e.target.closest('#replay')) { guideReplayAll(); announce('Replaying the whole step'); }
+  else if (e.target.closest('[data-show]')) { const i = +e.target.closest('[data-show]').dataset.show; guideShow(i); announce(`Part ${i + 1}: ${steps[stepIdx].todo[i]}`); }
 });
 $('#stepcard').addEventListener('change', e => {
   const cb = e.target.closest('[data-todo]'); if (!cb) return;
@@ -9336,6 +9401,12 @@ $('#stepmini').addEventListener('click', e => { const b = e.target.closest('[dat
 $('#steplist').addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) { goStep(+b.dataset.step, true); $('#allSteps').open = false; if (isMobile()) setSheet(true, 'a'); } });
 ['#prev', '#prevM'].forEach(q => $(q).addEventListener('click', () => goStep(stepIdx-1)));
 ['#next', '#nextM'].forEach(q => $(q).addEventListener('click', () => { if (stepIdx === steps.length-1) { setMode('config'); $('#tab-config').focus(); } else goStep(stepIdx+1); }));
+
+// the part-by-part controls on the view
+$('#msNext').addEventListener('click', () => { const tl = GA.tl; if (tl && tl.mini && GA.mi < tl.mini.length - 1) miniGo(GA.mi + 1);
+  else if (stepIdx === steps.length - 1) { setMode('config'); $('#tab-config').focus(); } else goStep(stepIdx + 1); });
+$('#msPrev').addEventListener('click', () => { if (GA.tl && GA.mi > 0) miniGo(GA.mi - 1); else if (stepIdx > 0) goStep(stepIdx - 1); });
+$('#msReplay').addEventListener('click', () => miniGo(GA.mi || 0));
 
 /* ---------- modes ---------- */
 function setMode(m){

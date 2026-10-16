@@ -156,6 +156,8 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 .guidefoot{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
 .guidefoot #next{flex:1}
 .app[data-mode="guide"] .panel-right{display:none!important}
+.stepmini{display:none}
+@media (min-width:1024px){.stepmini{display:flex;padding:2px 0 0;margin:0 -8px}.allsteps[open] + .stepmini{display:none}}
 @media (prefers-reduced-motion: reduce){.allsteps summary::after{transition:none}}
 .collapsebtn{flex:none;width:32px;height:32px;border-radius:999px;border:1px solid var(--line-strong);background:var(--raised);display:grid;place-items:center;color:var(--ink);cursor:pointer}
 .collapsebtn svg{width:16px;height:16px;transition:transform .2s}
@@ -645,7 +647,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
         <div id="guideLeft" class="guidecol" hidden>
           <div class="guidehead">
             <div class="prog"><p class="eyebrow" id="progLabel"></p><div class="track" aria-hidden="true"><span id="progfill"></span></div></div>
-            <details class="allsteps" id="allSteps"><summary><span>All steps</span><span class="why" id="stepsDone"></span></summary><ol class="steps" id="steplist"></ol></details>
+            <details class="allsteps" id="allSteps"><summary><span>All steps</span><span class="why" id="stepsDone"></span></summary><ol class="steps" id="steplist"></ol></details><ol class="steps stepmini" id="stepmini" aria-label="Previous, current and next step"></ol>
           </div>
           <div class="panel-scroll" id="guideScroll"><div class="pad stepcard" id="stepcard"></div></div>
           <div class="guidefoot"><button class="btn" id="prev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="lbl">Back</span></button><button class="btn primary" id="next">Next step</button></div>
@@ -3187,7 +3189,7 @@ function buildCPU(cpu, F){
     caps.forEach(([X, Y]) => { const m = boxP(X, X + 1.0, Y, Y + 0.5, 0, 0.35, capM); m.position.z = subZ + 0.18; g.add(m); });
     const pads = []; [[1.8, 9], [35.0, 9]].forEach(([X0, Y0]) => { for (let c = 0; c < 2; c++) for (let r = 0; r < 4; r++) pads.push([X0 + c * 1.8, Y0 + r * 1.7]); });
     pads.forEach(([X, Y]) => { const m = boxP(X, X + 1.1, Y, Y + 1.1, 0, 0.1, padM); m.position.z = subZ + 0.05; g.add(m); });
-    const [tx, ty] = P(1.3, 1.3); const tri = decal('▲', 1.9, {color:'#e7c45c'}); tri.position.set(tx, ty, subZ + 0.06); tri.rotation.z = Math.PI / 2; g.add(tri);
+    const [tx, ty] = P(1.3, 1.3); const tri = decal('▲', 1.9, {color:'#e7c45c'}); tri.position.set(tx, ty, subZ + 0.06); tri.rotation.z = Math.PI / 2; tri.userData.pin1 = true; g.add(tri);
   } else {
     // substrate with small notches near one corner of the top and bottom edges
     const s = shapeP([[0, 0], [33.1, 0], [33.1, 0.7], [34.5, 0.7], [34.5, 0], [37.5, 0], [37.5, 45], [34.5, 45], [34.5, 44.3], [33.1, 44.3], [33.1, 45], [0, 45], [0, 0]]);
@@ -3203,7 +3205,7 @@ function buildCPU(cpu, F){
     const cp = [8.35, 10.1, 31.1, 32.0, 36.45, 37.45, 38.35, 39.2, 40.05, 40.95].map(Y => [1.3, 2.6, Y]).concat([39.6, 40.5].map(Y => [34.9, 36.1, Y]));
     cp.forEach(([X0, X1, Y]) => { const m = boxP(X0, X1, Y - 0.32, Y + 0.32, 0, 0.35, capM); m.position.z = subZ + 0.18; g.add(m); });
     [[1.0, 1.0], [36.5, 1.0], [36.5, 44.0]].forEach(([X, Y]) => { const [x, y] = P(X, Y); const d = cyl(0.45, 0.06, padM, 'z', 12); d.position.set(x, y, subZ + 0.03); g.add(d); });
-    const [tx, ty] = P(1.6, 43.2); const tri = decal('▲', 2.4, {color:'#e7c45c'}); tri.position.set(tx, ty, subZ + 0.06); g.add(tri);
+    const [tx, ty] = P(1.6, 43.2); const tri = decal('▲', 2.4, {color:'#e7c45c'}); tri.position.set(tx, ty, subZ + 0.06); tri.userData.pin1 = true; g.add(tri);
   }
   if (cadOn(CAD_CPU[cpu.id], 'cpu')) buildCPUCad(cpu, g);
   return reg('cpu', g, 'cpu');
@@ -6016,7 +6018,7 @@ buildBoard = function(b){
   if (am5 && S.brackets && S.brackets.length) { const br = new THREE.Group(), plastic = M(0x15171a, {roughness:0.7});
     S.brackets.forEach(([u0, u1, v0, v1, h]) => { br.add(bx(-u1, -u0, -v1, -v0, Z0, Z0 + h - 3, plastic)); const mid = (u0 + u1)/2; br.add(bx(-mid - 7, -mid + 7, -v1 + 1, -v0 - 1, Z0 + h - 3, Z0 + h, plastic)); });
     g.add(br); g.userData.brackets = br; }
-  { const tri = decal('▲', 4, {color:'#e7c45c'}); tri.position.set(am5 ? -(su - 25) : -(su - 19), am5 ? -(sv - 25) : -(sv + 28), Z0 + 5.1); g.add(tri); }   // where the CPU's pin-1 triangle sits: AM5 top-left, LGA1851 bottom-left
+  { const tri = decal('▲', 4, {color:'#e7c45c'}); tri.position.set(am5 ? -(su - 25) : -(su - 19), am5 ? -(sv - 25) : -(sv + 28), Z0 + 5.1); tri.userData.pin1sock = true; g.add(tri); }   // where the CPU's pin-1 triangle sits: AM5 top-left, LGA1851 bottom-left
   A.socket = anchor('socket', -su, -sv, 10);
   // memory slots: latch at the top end (both ends on boards that use two)
   const names = F.ram.length === 4 ? ['A1', 'A2', 'B1', 'B2'] : ['A', 'B'], twoLatch = /^msi|^gigabyte/.test(b.id);
@@ -6329,7 +6331,7 @@ const boardMat = (k, id) => { const c = (BOARD_MATS_BY[id] || {})[k] || BOARD_MA
 function buildBoardCad(b, g){
   const C = CAD_BOARD[b.id];
   cadProxy(g, o => o.userData.decal);
-  const put = (grp, set) => { for (const k in set) THREE.Group.prototype.add.call(grp, cadMesh(set[k], boardMat(k, b.id))); };
+  const put = (grp, set) => { for (const k in set) { const m = cadMesh(set[k], boardMat(k, b.id)); m.userData.cadKey = k; THREE.Group.prototype.add.call(grp, m); } };   // cadKey: the guide finds the memory latches by it
   put(g, C.static);
   if (C.brackets && g.userData.brackets) put(g.userData.brackets, C.brackets);
   if (C.m2hs && g.userData.m2hs) put(g.userData.m2hs, C.m2hs);
@@ -8274,13 +8276,13 @@ function setCollapsed(side, on, save){
    the case on them, and the hoses follow it onto the CPU. */
 const tweens = [];
 function tween(dur, delay, fn){ tweens.push({t0:performance.now() + (delay || 0), dur, fn}); dirty = true; }
-const EZ = {io:t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2, out:t => 1 - Math.pow(1 - t, 3), in:t => t*t*t, lin:t => t};
-const GA = {tl:null, T:0, playing:false, wall:0, from:0, to:0, ph:-2};
+const EZ = {sm:t => t * t * (3 - 2 * t), io:t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2, out:t => 1 - Math.pow(1 - t, 3), in:t => t*t*t, lin:t => t};
+const GA = {tl:null, T:0, playing:false, wall:0, from:0, to:0, ph:-2, speed:0.5};   // half speed: each step takes twice its timeline length, for someone doing this the first time
 function runTweens(now){
   for (let i = tweens.length-1; i >= 0; i--) { const tw = tweens[i]; if (now < tw.t0) continue;
     const t = Math.min(1, (now - tw.t0) / tw.dur); tw.fn(ease(t)); if (t >= 1) tweens.splice(i, 1); }
   let moving = tweens.length > 0;
-  if (GA.playing && GA.tl) { let T = GA.from + (now - GA.wall) / 1000; if (T >= GA.to) { T = GA.to; GA.playing = false; }
+  if (GA.playing && GA.tl) { let T = GA.from + (now - GA.wall) / 1000 * GA.speed; if (T >= GA.to) { T = GA.to; GA.playing = false; }
     GA.T = T; tlSeek(GA.tl, T); guidePhaseUI(); moving = true; }
   return moving;
 }
@@ -8431,34 +8433,48 @@ function driverMesh(){
 }
 // Screws going in (or out) one after another, a screwdriver turning each.
 // pts: [{p, d}] where p is where the head seats and d points into the part. Returns when the last one is done.
+// The screwdriver never jumps: it comes in from away from the part, travels between screws at an unhurried pace (later
+// screws wait for it), and backs away when it's done.
+const DRV_SPEED = 60, PLUNGE = 0.6;   // PLUNGE: seconds to come down onto a screw head (and back off it)   // mm per timeline second while it moves between screws
 function screws(tl, parent, pts, t, o){
   o = o || {}; const dur = o.dur || 0.5, gap = o.gap != null ? o.gap : 0.14, travel = o.travel || 7, turns = o.turns || 3, out = !!o.out;
-  const quick = o.quick != null ? o.quick : 99, P = propMats();
+  const quick = o.quick != null ? o.quick : 99;
   const key = parent.uuid; let D = tl.drv[key];
-  if (!D) { const m = driverMesh(); parent.add(m); D = tl.drv[key] = {m, P:[], Q:[], V:[[0, false]], S:[], ang:0}; }
+  if (!D) { const m = driverMesh(); parent.add(m); m.visible = false; D = tl.drv[key] = {m, P:[], Q:[], V:[[0, false]], S:[], ang:0, last:null}; }
   pts.forEach((s, j) => {
     const tool = o.tool !== false && j < quick, d = s.d.clone().normalize(), du = tool ? dur : Math.min(dur, 0.22), q = qUp(d.clone().negate());
     const seated = s.p.clone(), away = s.p.clone().addScaledVector(d, -travel), a = out ? seated : away, b = out ? away : seated;
+    const tip = v => v.clone().addScaledVector(d, -2.4), lift = v => tip(v).addScaledVector(d, -26);
+    if (tool) {
+      const start = lift(a), L0 = D.last;
+      if (!L0 || t - L0.t > 4) {   // comes in from well away from the part
+        if (L0) { D.P.push([L0.t + 1.4, L0.p.clone().addScaledVector(L0.d, -70), 'sm']); D.V.push([L0.t + 1.4, false]); }
+        const far = start.clone().addScaledVector(d, -80), tIn = Math.max(t - 2.2, L0 ? L0.t + 1.45 : 0); if (tIn > t - 2.2) t = tIn + 2.2;
+        D.V.push([tIn, true]); D.P.push([tIn, far], [t - PLUNGE, start, 'sm']); D.Q.push([tIn, q], [t - PLUNGE, q]);
+      } else {                    // moves across from the last screw, no faster than DRV_SPEED
+        const need = Math.max(0.7, L0.p.distanceTo(start) / DRV_SPEED);
+        if (t - PLUNGE - L0.t < need) t = L0.t + need + PLUNGE;
+        D.P.push([t - PLUNGE, start, 'sm']); D.Q.push([L0.t, L0.q], [t - PLUNGE, q]);
+      }
+      D.P.push([t, tip(a), 'sm'], [t + du, tip(b), 'lin'], [t + du + PLUNGE, lift(b), 'sm']); D.Q.push([t + du + PLUNGE, q]);
+      const sg = out ? -1 : 1; D.S.push([t, D.ang], [t + du, D.ang + sg * turns * Math.PI * 2, 'lin']); D.ang += sg * turns * Math.PI * 2;
+      D.last = {p:lift(b), t:t + du + PLUNGE, q, d};
+    }
     if (!o.noScrew) { const sc = screwMeshG(); sc.quaternion.copy(q); parent.add(sc); sc.visible = false;
-      kVis(tl, sc, out ? [[0, true], [t + du + 0.12, false]] : [[0, false], [t - 0.02, true]]);
+      kVis(tl, sc, out ? [[0, true], [t + du + 0.15, false]] : [[0, false], [t - 0.02, true]]);
       kPos(tl, sc, [[t, a.clone()], [t + du, b.clone(), 'lin']]);
       const spin = sc.userData.spin, sg = out ? -1 : 1; kNum(tl, v => { spin.rotation.y = v; }, [[t, 0], [t + du, sg * turns * Math.PI * 2, 'lin']]); }
-    if (tool) { const tip = v => v.clone().addScaledVector(d, -2.4), lift = v => tip(v).addScaledVector(d, -26);
-      D.V.push([t - 0.26, true], [t + du + 0.2, false]);
-      D.P.push([t - 0.26, lift(a)], [t, tip(a)], [t + du, tip(b), 'lin'], [t + du + 0.2, lift(b)]);
-      D.Q.push([t - 0.26, q], [t + du + 0.2, q]);
-      const sg = out ? -1 : 1; D.S.push([t, D.ang], [t + du, D.ang + sg * turns * Math.PI * 2, 'lin']); D.ang += sg * turns * Math.PI * 2; }
-    t += du + (tool ? gap + 0.26 : 0.06);
+    t += du + (tool ? gap + PLUNGE : 0.08);
   });
   return t;
 }
-// the screwdriver's keys, gathered while the steps were laid out
+// the screwdriver's keys, gathered while the steps were laid out; at the end it backs away and goes
 function drvFinish(tl){
   Object.values(tl.drv).forEach(D => { if (!D.P.length) { D.m.visible = false; return; }
-    // between two screws it stays in view and moves across; the gaps it shows for are merged
-    const V = [[0, false]]; D.V.slice(1).forEach(([t, v]) => { const last = V[V.length - 1]; if (v && !last[1] && V.length > 1 && t - last[0] < 0.7) V.pop(); else V.push([t, v]); });
-    kVis(tl, D.m, V); kPos(tl, D.m, D.P.sort((a, b) => a[0] - b[0])); kQuat(tl, D.m, D.Q.sort((a, b) => a[0] - b[0]));
-    const sp = D.m.userData.spin; kNum(tl, v => { sp.rotation.y = v; }, D.S.sort((a, b) => a[0] - b[0])); });
+    const L0 = D.last; if (L0) { D.P.push([L0.t + 1.4, L0.p.clone().addScaledVector(L0.d, -70), 'sm']); D.V.push([L0.t + 1.4, false]); }
+    const by = (a, b) => a[0] - b[0];
+    kVis(tl, D.m, D.V.sort(by)); kPos(tl, D.m, D.P.sort(by)); kQuat(tl, D.m, D.Q.sort(by));
+    const sp = D.m.userData.spin; kNum(tl, v => { sp.rotation.y = v; }, D.S.length ? D.S.sort(by) : [[0, 0]]); });
 }
 
 /* ----- where things are ----- */
@@ -8572,8 +8588,16 @@ SEQ.cpu = (tl, s) => {
   kVis(tl, hinge, [[0, true], [4.8, false]]);
   const c = scn.cpu, h = homeOf(c);
   kVis(tl, c, [[0, false], [0.8, true]]); kPos(tl, c, [[0.8, h.clone().add(gV(0, 0, 58))], [1.95, h.clone().add(gV(0, 0, 58))], [3.05, h.clone()]]);
+  // rings on the two gold triangles: the one printed on the CPU (it rides down with it) and the one on the socket frame
+  rig.updateMatrixWorld(true); const inAsm = o => { return assembly.worldToLocal(o.getWorldPosition(new THREE.Vector3())); };
+  let cpuTri = null, sockTri = null; c.traverse(o => { if (o.userData.pin1) cpuTri = o; }); b.traverse(o => { if (o.userData.pin1sock) sockTri = o; });
   const tri = am5 ? [su - 25, sv - 25] : [su - 19, sv + 28];
-  ring(tl, tl.asmG, asmAt(tri[0], tri[1], 6.8), 0.95, 1.95, 13); ring(tl, tl.asmG, asmAt(tri[0], tri[1], 66), 1.05, 1.95, 13);
+  ring(tl, tl.asmG, sockTri ? inAsm(sockTri).add(gV(0, 0, 0.5)) : asmAt(tri[0], tri[1], 6.8), 0.95, 1.95, 11);
+  // the CPU's triangle is printed in the corner of its package that matches the socket's triangle (that is the point of
+  // the marks); its ring rides on the CPU, at that corner, a few millimetres in
+  { const st = sockTri ? inAsm(sockTri) : asmAt(tri[0], tri[1], 6.8), cb = boxIn(c, assembly).translate(homeOf(c).clone().sub(c.position));
+    const corner = gV(Math.abs(st.x - cb.min.x) < Math.abs(st.x - cb.max.x) ? cb.min.x + 3 : cb.max.x - 3, Math.abs(st.y - cb.min.y) < Math.abs(st.y - cb.max.y) ? cb.min.y + 3 : cb.max.y - 3, cb.min.z + 2);
+    const g2 = tlGroupIn(tl, c); g2.position.copy(corner.sub(homeOf(c))); ring(tl, g2, gV(0, 0, 0), 1.05, 1.95, 9); }
   phase(tl, 0, 0, 0.8); phase(tl, 1, 0.8, 1.95); phase(tl, 2, 1.95, 3.05); phase(tl, 3, 3.05, 4.8);
 };
 SEQ.m2 = (tl, s) => {
@@ -8592,15 +8616,49 @@ SEQ.m2 = (tl, s) => {
   phase(tl, 3, 2.9, 4.25); phase(tl, 4, 4.3, 5.4);
   tl.still = 4.25;
 };
+// The memory slots' latches, as drawn in the board's CAD model: the vertices of each target slot's latch (one end, or both
+// on boards that have two) tip outward about the latch's foot. open(v) sets every latch to v (0 shut, 1 open).
+function ramLatches(tl, slots){
+  const G = BOARD_GEO && BOARD_GEO[sel.board], board = scn.board; if (!G || !G.dimms) return null;
+  const meshes = []; board.traverse(o => { if (o.isMesh && o.userData.cadKey && /latch/i.test(o.userData.cadKey) && o.geometry && o.geometry.attributes.position) meshes.push(o); });
+  const groups = [];
+  meshes.forEach(m => { m.updateMatrix(); const M4 = m.matrix.clone(), Mi = M4.clone().invert(), pa = m.geometry.attributes.position, na = m.geometry.attributes.normal, v = new THREE.Vector3();
+    const local = []; for (let i = 0; i < pa.count; i++) local.push(v.fromBufferAttribute(pa, i).applyMatrix4(M4).clone());
+    slots.forEach(si => { const d = G.dimms[si]; if (!d) return; const [u0, u1, v0, v1, h] = d;
+      [[v0, 1], [v1, -1]].forEach(([ve, outS]) => {   // outward along y: past v0 is +y (y = -v), past v1 is -y
+        const yEnd = -ve, idx = [];
+        local.forEach((p, i) => { const along = (p.y - yEnd) * outS; if (p.x >= -u1 - 2.5 && p.x <= -u0 + 2.5 && along > -3 && along < 16 && p.z < Z0 + h + 14) idx.push(i); });
+        if (idx.length < 4) return;
+        let zMin = Infinity; idx.forEach(i => { zMin = Math.min(zMin, local[i].z); });
+        groups.push({m, M4, Mi, idx, P:idx.map(i => local[i].clone()), N:na ? idx.map(i => new THREE.Vector3().fromBufferAttribute(na, i)) : null, hy:yEnd + outS * 1.5, hz:zMin, outS}); }); }); });
+  if (!groups.length) return null;
+  const q = new THREE.Quaternion(), ax = gV(1, 0, 0), w = new THREE.Vector3(), nn = new THREE.Vector3();
+  const set = v => { const touched = new Set();
+    groups.forEach(g => { q.setFromAxisAngle(ax, -g.outS * 0.85 * v); const pa = g.m.geometry.attributes.position, na = g.m.geometry.attributes.normal;
+      g.idx.forEach((i, k) => { w.copy(g.P[k]); w.y -= g.hy; w.z -= g.hz; w.applyQuaternion(q); w.y += g.hy; w.z += g.hz; w.applyMatrix4(g.Mi); pa.setXYZ(i, w.x, w.y, w.z);
+        if (na && g.N) { nn.copy(g.N[k]).applyQuaternion(q); na.setXYZ(i, nn.x, nn.y, nn.z); } });
+      touched.add(g.m); });
+    touched.forEach(m => { m.geometry.attributes.position.needsUpdate = true; if (m.geometry.attributes.normal) m.geometry.attributes.normal.needsUpdate = true; m.geometry.computeBoundingSphere(); }); invalidate(false); };
+  tl.resets.push(() => set(0));
+  set.ends = groups.map(g => { const c = g.P.reduce((acc, p) => acc.add(p), gV(0, 0, 0)).multiplyScalar(1 / g.P.length); return c.setZ(c.z + 4); });
+  return set;
+}
 SEQ.ram = (tl, s) => {
   const r = scn.ram, h = homeOf(r), A = scn.anchors, keys = (s.tags || []).map(t => t[0]).filter(k => A[k]);
-  const both = /latches/.test(s.todo[0] || ''), rb = boxIn(r, assembly);
-  keys.forEach(k => { const p = A[k].position.clone(); ring(tl, tl.asmG, p, 0.15, 1.0, 14); ring(tl, tl.asmG, p, 3.0, 3.7, 14);
-    if (both && !rb.isEmpty()) { const q = p.clone(); q.y = rb.min.y - 3; ring(tl, tl.asmG, q, 0.15, 1.0, 14); ring(tl, tl.asmG, q, 3.0, 3.7, 14); } });
-  phase(tl, 0, 0, 1.0);
-  kVis(tl, r, [[0, false], [1.0, true]]);
-  kPos(tl, r, [[1.0, h.clone().add(gV(0, 0, 72))], [1.9, h.clone().add(gV(0, 0, 9))], [2.5, h.clone().add(gV(0, 0, 9))], [2.95, h.clone().add(gV(0, 0, -0.7)), 'in'], [3.1, h.clone()]]);
-  phase(tl, 1, 1.0, 2.5); phase(tl, 2, 2.5, 3.7);
+  const names = bF().ram.length === 4 ? ['A1', 'A2', 'B1', 'B2'] : ['A', 'B'], slots = keys.map(k => names.indexOf(k.replace(/^ram/, ''))).filter(i => i >= 0);
+  const latch = ramLatches(tl, slots);
+  // 1. the latches swing open
+  if (latch) kNum(tl, latch, [[0.4, 0], [1.6, 1], [5.2, 1], [5.55, 0, 'in']]);
+  const ends = latch && latch.ends.length ? latch.ends : keys.map(k => A[k].position.clone());
+  ends.forEach(p => ring(tl, tl.asmG, p.clone(), 0.3, 1.7, 14));
+  phase(tl, 0, 0, 1.8);
+  // 2. each stick comes in above its slot, notch over the key
+  kVis(tl, r, [[0, false], [1.9, true]]);
+  kPos(tl, r, [[1.9, h.clone().add(gV(0, 0, 80))], [3.2, h.clone().add(gV(0, 0, 10))], [4.4, h.clone().add(gV(0, 0, 10))], [5.3, h.clone().add(gV(0, 0, -0.7)), 'in'], [5.5, h.clone()]]);
+  phase(tl, 1, 1.9, 4.4);
+  // 3. pressed down at both ends: the latches snap shut over the stick's ends
+  ends.forEach(p => ring(tl, tl.asmG, p.clone(), 5.4, 6.4, 14));
+  phase(tl, 2, 4.4, 6.4);
 };
 // AM5: the board's own plastic brackets come off (four screws), for the cooler's or the pump's hardware
 function bracketsOff(tl, t){
@@ -8638,34 +8696,74 @@ SEQ.cooler = (tl, s) => {
   phase(tl, todoIx(s, /airflow toward/), t2 + 0.1, t2 + 1.0);
   const fan = scn.anchors.cpufan; if (fan) { ring(tl, tl.asmG, fan.position.clone(), t2 + 1.05, t2 + 2.0, 14); phase(tl, todoIx(s, /^Plug the fan/), t2 + 1.05, t2 + 2.0); }
 };
+// a fan or radiator mount's outward direction, from the case's own mount data (the side its fans extend from, reversed),
+// and where the case's outer face is along it
+function mountOut(m){
+  const f = L.geo.fans[m]; if (!f || !f.in) return null;
+  const n = DIR[(f.in[0] === '+' ? 'n' : 'p') + f.in[1]].clone(), a = f.in[1], C = caseBox();
+  return {n, a, wall:n[a] > 0 ? C.max[a] : C.min[a]};
+}
+// How far off its mount a part (box `body`, rig coordinates, at its home) can be held while it slides in through the open
+// side and then onto the mount, without passing through the case, the board or the memory: the largest of the candidates
+// that adds no overlap beyond what the part already touches at home (or, failing that, the one that adds least).
+function clearOff(body, n, side, cands){
+  const obs = [].concat(leafBoxes(scn.case), leafBoxes(scn.board), scn.ram && scn.ram.visible ? leafBoxes(scn.ram) : []).map(l => l.b || l).filter(b => b && b.min);
+  const ov = (a, b) => { const I = a.clone().intersect(b); if (I.isEmpty()) return 0; const sz = I.getSize(new THREE.Vector3()); return Math.min(sz.x, sz.y, sz.z); };
+  const B = body.clone().expandByScalar(-2), home = obs.map(b => ov(B, b)); let best = null;
+  for (const d of cands || [60, 50, 40, 32, 25, 18, 12, 8, 4, 0]) {
+    const off = B.clone().translate(n.clone().multiplyScalar(-d)), slide = off.clone(); if (!side) slide.max.z = Math.max(slide.max.z, L.W + 80);
+    const onto = off.clone().union(B); let w = 0; obs.forEach((b, j) => { w = Math.max(w, ov(slide, b) - home[j], ov(onto, b) - home[j]); });
+    if (w <= 1) return d; if (!best || w < best.w) best = {d, w}; }
+  return best.d;
+}
+// the radiator's way in: held beside the open side (outside), slid in a little off its mount (off), then onto it (home)
+function radPath(){
+  const rg = scn.radiator, k = byId.coolers[sel.cooler], pos = resolvedRadPos(sel); if (!rg || !rg.children.length || !pos) return null;
+  const P = radPlacement(pos, k, byId.cases[sel.case], L), O = mountOut(pos); if (!P || !O) return null;
+  const [x0, x1, y0, y1, z0, z1] = P.box, body = new THREE.Box3(gV(x0, y0, z0), gV(x1, y1, z1));
+  const fans = rg.children.filter(c => c.userData.air), all = body.clone(); fans.forEach(f => all.union(boxIn(f, rg)));
+  const n = O.n, h = homeOf(rg), openSide = n.z > 0.5;
+  const off = openSide ? h.clone() : h.clone().addScaledVector(n, -clearOff(all, n, Math.abs(n.z) > 0.5));
+  const outside = off.clone().add(gV(0, 0, L.W + 60 - all.min.z));
+  return {rg, pos, P, O, body, fans, all, n, h, off, outside, openSide};
+}
+// hoses from the pump (pose M4, rig coordinates) to the radiator wherever it is; they settle into their installed shape
+// over the last few millimetres as the radiator reaches its mount
+function hosesToRadiator(tl, PK, M4, rg, rh){
+  const off = rg.position.clone().sub(rh), d = off.length();
+  if (d < 0.3) { PK.H.forEach(h => { h.R.mesh.visible = true; }); if (tl.gh) tl.gh.forEach(m => { m.visible = false; }); return; }
+  PK.H.forEach(h => { h.R.mesh.visible = false; }); hoseDraw(tl, PK, M4, off, EZ.io(Math.max(0, 1 - d / 60)));
+}
 SEQ.rad = (tl, s) => {
-  const rg = scn.radiator; if (!rg || !rg.children.length) return;
-  const fans = rg.children.filter(c => c.userData.air);
-  const bodyBox = new THREE.Box3(); rg.children.forEach(c => { if (!c.userData.rope && !c.userData.anchor && !c.userData.air) bodyBox.union(boxIn(c, rg)); });
-  const all = bodyBox.clone(); fans.forEach(f => all.union(boxIn(f, rg)));
-  const O = outwardOf(all), n = O.n, h = homeOf(rg), inside = h.clone().addScaledVector(n, -95);
+  const R = radPath(); if (!R) return;
+  const {rg, O, body, fans, n, h, off, outside} = R;
   const G = tlGroupIn(tl, rg);   // props that move with the radiator
-  // 1. the fans onto the radiator, four screws each
-  let t = 0.2; const fScrews = [];
+  // 1. outside the case, the fans go onto the radiator, four screws each
+  let t = 0.3; const fScrews = [];
   fans.forEach((f, i) => { const fb = boxIn(f, rg), fc = fb.getCenter(new THREE.Vector3()), sz = fb.getSize(new THREE.Vector3());
-    const thin = ['x', 'y', 'z'].reduce((a, b) => sz[a] <= sz[b] ? a : b), a = gV(0, 0, 0); a[thin] = Math.sign(fc[thin] - bodyBox.getCenter(new THREE.Vector3())[thin]) || 1;
-    const fh = homeOf(f), off = fh.clone().addScaledVector(a, 50);
-    kPos(tl, f, [[0, off], [t + i * 0.25, off], [t + 0.6 + i * 0.25, fh.clone()]]);
-    const hs = (Math.min(sz.x, sz.y, sz.z) === sz[thin] ? Math.max(sz.x, sz.y, sz.z) : 120) > 130 ? 62.5 : 52.5, other = ['x', 'y', 'z'].filter(q => q !== thin);
+    const thin = ['x', 'y', 'z'].reduce((a, b) => sz[a] <= sz[b] ? a : b), a = gV(0, 0, 0); a[thin] = Math.sign(fc[thin] - body.getCenter(new THREE.Vector3())[thin]) || 1;
+    const fh = homeOf(f), fo = fh.clone().addScaledVector(a, 60);
+    kPos(tl, f, [[0, fo], [t + i * 0.5, fo], [t + 1.0 + i * 0.5, fh.clone()]]);
+    const other = ['x', 'y', 'z'].filter(q => q !== thin), hs = Math.max(sz[other[0]], sz[other[1]]) > 130 ? 62.5 : 52.5;
     [[-1, -1], [1, 1], [1, -1], [-1, 1]].forEach(([p, q]) => { const pt = fc.clone(); pt[other[0]] += p * hs; pt[other[1]] += q * hs; pt[thin] = a[thin] > 0 ? fb.max[thin] : fb.min[thin]; fScrews.push({p:pt, d:a.clone().negate()}); }); });
-  t = screws(tl, G, fScrews, t + 0.6 + fans.length * 0.25 + 0.1, {dur:0.16, gap:0.03, quick:2});
-  kPos(tl, rg, [[0, inside], [t + 0.15, inside], [t + 1.15, h.clone()]]);
-  phase(tl, todoIx(s, /^Screw the fans/), 0, t + 0.1);
-  const tHold = t + 0.15; t += 1.2;
-  phase(tl, todoIx(s, /^Hold it/), tHold, t);
-  // 2. long screws from outside the case into the radiator (through the fans where they sit against the panel)
+  t = screws(tl, G, fScrews, t + 1.1 + fans.length * 0.5, {dur:0.35, gap:0.05, quick:4});
+  phase(tl, todoIx(s, /^Screw the fans/), 0, t);
+  // 2. into the case through the open side, then up (or out) onto the mount, tubes toward where the case manual says
+  const t0 = t + 0.3, t1 = t0 + 2.4, t2 = t1 + 1.2;
+  kPos(tl, rg, [[0, outside], [t0, outside], [t1, off], [t2, h.clone()]]);
+  // a pump that's already on the CPU (radiator over the open side): its hoses follow the radiator in
+  if (shownAt(s).has('pump') && steps.indexOf(s) > steps.findIndex(x => x.key === 'pump')) { const PK = parkInfo(); if (PK) {
+    const A = assembly.userData.home, Mhome = new THREE.Matrix4().makeTranslation(A.x, A.y, A.z).multiply(PK.Mh);
+    PK.H.forEach(hh => tlRec(tl, hh.R.mesh, 'visible')); tl.post.push(() => hosesToRadiator(tl, PK, Mhome, rg, h)); } }
+  phase(tl, todoIx(s, /^Hold it/), t0, t2 + 0.2); t = t2 + 0.4;
+  // 3. long screws from outside the case, through the mount, into the radiator
   const pts = []; fans.forEach(f => { const fb = boxIn(f, rg), fc = fb.getCenter(new THREE.Vector3()).add(h), sz = fb.getSize(new THREE.Vector3());
     const other = ['x', 'y', 'z'].filter(q => q !== O.a), hs = Math.max(sz[other[0]], sz[other[1]]) > 130 ? 62.5 : 52.5;
     [[-1, -1], [1, 1], [1, -1], [-1, 1]].forEach(([p, q]) => { const pt = fc.clone(); pt[other[0]] += p * hs; pt[other[1]] += q * hs; pt[O.a] = O.wall; pts.push({p:pt, d:n.clone().negate()}); }); });
-  const t3 = screws(tl, tl.rigG, pts, t + 0.1, {dur:0.42, gap:0.08, quick:3, travel:12});
-  phase(tl, todoIx(s, /long screws/), t, t3);
+  const t3 = screws(tl, tl.rigG, pts, t, {dur:0.45, gap:0.1, travel:12, quick:4});
+  phase(tl, todoIx(s, /long screws/), t - 0.2, t3);
   // the pump stays on its hoses, hanging outside the case
-  const pi = todoIx(s, /pump hang/); if (pi >= 0) { const PK = parkInfo(); if (PK) { const pc = PK.c.clone().applyMatrix4(PK.Mp); ring(tl, tl.rigG, pc, t3 + 0.1, t3 + 1.1, 22); phase(tl, pi, t3 + 0.1, t3 + 1.1); } }
+  const pi = todoIx(s, /pump hang/); if (pi >= 0) { const PK = parkInfo(); if (PK) { const pc = PK.c.clone().applyMatrix4(PK.Mp); ring(tl, tl.rigG, pc, t3 + 0.2, t3 + 1.6, 22); phase(tl, pi, t3 + 0.2, t3 + 1.6); } }
 };
 SEQ.board = (tl, s) => {
   const a = assembly, H = a.userData.home.clone(), B = a.userData.bench.clone(), F = bF();
@@ -8683,6 +8781,10 @@ SEQ.board = (tl, s) => {
 };
 SEQ.pump = (tl, s) => {
   const PK = parkInfo(), pump = scn.pump, P = propMats(), F = bF(), [su, sv] = F.socket; if (!PK) return;
+  // radiator over the open side (it goes in after the pump): it waits beside the case on the hoses meanwhile
+  const radLater = steps.findIndex(x => x.key === 'rad') > steps.indexOf(s); let radOff = gV(0, 0, 0);
+  if (radLater) { const R = radPath(); if (R) { const wait = R.outside.clone().add(gV(0, 0, 170)); tlRec(tl, R.rg, 'visible'); tlRec(tl, R.rg, 'position'); radOff = wait.clone().sub(R.h); tl.post.unshift(() => { R.rg.visible = true; R.rg.position.copy(wait); }); } }
+  const Mstart = PK.Mp.clone();   // (with the radiator waiting further out, the pump hangs between it and the case)
   let t = bracketsOff(tl, 0.1);
   // the pump's own standoffs into the mounting holes
   const holes = mountHoles();
@@ -8694,7 +8796,7 @@ SEQ.pump = (tl, s) => {
   tlRec(tl, pump, 'position'); tlRec(tl, pump, 'quaternion'); tlRec(tl, pump, 'visible'); PK.H.forEach(h => tlRec(tl, h.R.mesh, 'visible'));
   const A = assembly.userData.home, Mhome = new THREE.Matrix4().makeTranslation(A.x, A.y, A.z).multiply(PK.Mh);
   const ph = new THREE.Vector3(), qh = new THREE.Quaternion(), sh = new THREE.Vector3(); Mhome.decompose(ph, qh, sh);
-  const pp = new THREE.Vector3(), qp = new THREE.Quaternion(); PK.Mp.decompose(pp, qp, sh);
+  const pp = new THREE.Vector3(), qp = new THREE.Quaternion(); Mstart.decompose(pp, qp, sh);
   const hover = ph.clone().add(gV(0, 0, 95)), mid = pp.clone().lerp(hover, 0.5).add(gV(0, 40, 30));
   const t1 = t + 0.1, t2 = t1 + 1.6, t3 = t2 + 0.7, t4 = t3 + 0.75;
   const M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3();
@@ -8703,8 +8805,8 @@ SEQ.pump = (tl, s) => {
     if (u <= 1) { const e = u; p.copy(pp).lerp(mid, e).lerp(mid.clone().lerp(hover, e), e); q.copy(qp).slerp(qh, Math.min(1, e * 1.25)); }
     else { p.copy(hover).lerp(ph, u - 1); q.copy(qh); }
     M4.compose(p, q, gV(1, 1, 1)); pump.visible = true;
-    if (u >= 2) { pumpPose(Mhome); PK.H.forEach(h => { h.R.mesh.visible = true; }); if (tl.gh) tl.gh.forEach(m => { m.visible = false; }); return; }
-    pumpPose(M4); PK.H.forEach(h => { h.R.mesh.visible = false; }); hoseDraw(tl, PK, M4, gV(0, 0, 0), u > 1 ? EZ.io(Math.max(0, (u - 1.15) / 0.85)) : 0); });
+    if (u >= 2 && !radLater) { pumpPose(Mhome); PK.H.forEach(h => { h.R.mesh.visible = true; }); if (tl.gh) tl.gh.forEach(m => { m.visible = false; }); return; }
+    const M5 = u >= 2 ? Mhome : M4; pumpPose(M5); PK.H.forEach(h => { h.R.mesh.visible = false; }); hoseDraw(tl, PK, M5, radOff, !radLater && u > 1 ? EZ.io(Math.max(0, (u - 1.15) / 0.85)) : 0); });
   // the plastic cover on the cold plate
   const pb = boxIn(pump, pump), cz = pb.min.z; const cov = new THREE.Mesh(new THREE.BoxGeometry(54, 54, 0.8), P.film);
   const c0 = gV(-su, -sv, cz - 0.4); cov.position.copy(c0); pump.add(cov); tl.extra.push(cov);
@@ -8718,7 +8820,7 @@ SEQ.pump = (tl, s) => {
   const An = scn.anchors; let t6 = t5 + 0.1;
   if (An.pump) ring(tl, tl.asmG, An.pump.position.clone(), t6, t6 + 1.1, 14); if (An.cpufan) ring(tl, tl.asmG, An.cpufan.position.clone(), t6 + 0.3, t6 + 1.1, 14);
   phase(tl, 3, t6, t6 + 1.1);
-  tl.frameExtra = () => { const hv = pump.visible; pumpPose(PK.Mp); pump.visible = true; const b = new THREE.Box3().setFromObject(pump); pump.visible = hv; return b; };
+  tl.frameExtra = () => { const hv = pump.visible; pumpPose(Mstart); pump.visible = true; const b = new THREE.Box3().setFromObject(pump); pump.visible = hv; return b; };
 };
 SEQ.psu = (tl, s) => {
   const ps = scn.psu, h = homeOf(ps), c = byId.cases[sel.case], G = tlGroupIn(tl, ps), dual = c.layout === 'dual-chamber', sff = c.layout === 'sff';
@@ -8747,10 +8849,12 @@ SEQ.fans = (tl, s) => {
   const byMount = {}; list.forEach(f => (byMount[f.userData.fanMount] = byMount[f.userData.fanMount] || []).push(f));
   Object.entries(byMount).forEach(([m, fs]) => {
     const item = s.todo.findIndex(x => x.startsWith(MOUNT_NAME[m] + ':')), t0 = t, cfg = sel.fanCfg[m] || {}, stock = cfg.model === 'stock';
-    fs.forEach(f => { const fb = boxIn(f), O = outwardOf(fb), h = homeOf(f), fc = fb.getCenter(new THREE.Vector3()), sz = fb.getSize(new THREE.Vector3());
+    fs.forEach(f => { const fb = boxIn(f), O = mountOut(m) || outwardOf(fb), h = homeOf(f), fc = fb.getCenter(new THREE.Vector3()), sz = fb.getSize(new THREE.Vector3());
       const dir = cfg.dir === 'in' ? O.n.clone().negate() : O.n.clone();
       if (!stock) {   // fitted now: from inside the case to the mount, then four screws from outside
-        kPos(tl, f, [[0, h.clone().addScaledVector(O.n, -75)], [t, h.clone().addScaledVector(O.n, -75)], [t + 0.6, h.clone()]]);
+        // from beside the open side, in through it, then onto the mount
+        const sideM = Math.abs(O.n.z) > 0.5, off = h.clone().addScaledVector(O.n, -clearOff(fb, O.n, sideM, [40, 30, 22, 15, 10, 6, 3, 0])), outside = sideM ? h.clone().addScaledVector(O.n, -(L.W + 40)) : off.clone().add(gV(0, 0, L.W + 50 - fb.min.z));
+        kPos(tl, f, [[0, outside], [t, outside], [t + 1.4, off], [t + 2.0, h.clone()]]); t += 1.4;
         const other = ['x', 'y', 'z'].filter(q => q !== O.a), hs = Math.max(sz[other[0]], sz[other[1]]) > 130 ? 62.5 : 52.5;
         const pts = [[-1, -1], [1, 1], [1, -1], [-1, 1]].map(([p, q]) => { const pt = fc.clone(); pt[other[0]] += p * hs; pt[other[1]] += q * hs; pt[O.a] = O.wall; return {p:pt, d:O.n.clone().negate()}; });
         t = screws(tl, tl.rigG, pts, t + 0.65, {dur:0.36, gap:0.06, quick:firstDone ? 0 : 2, travel:9}); firstDone = true;
@@ -8916,11 +9020,13 @@ function buildSteps(){
     watch: k.ramClearance != null && r.height > k.ramClearance ? 'This memory is taller than the space under the front fan. Slide that fan up its clips before tightening.' : 'Forgetting the film on the cooler base stops heat from reaching it.',
     why:[`The cooler pulls heat from the CPU through its heat pipes into the fins, and the fan${k.fans>1?'s':''} push it toward the rear exhaust.`]};
 
+  // a radiator on a mount over the open side (the NR200P's side bracket) would be in the pump's way, so the pump goes on first
+  const openSideRad = k.type === 'aio' && pos && ((caseGeo(c).fans || {})[pos] || {}).in === '-z';
   if (k.type === 'aio') {
     S.rad = {key:'rad', title:'Mount the radiator', show:['radiator'], focus:['radiator'], anim:'drop',
       screws: scr('radiator') || {text:"Long screws from the cooler's box"},
       sum: pos ? `Screw the ${k.radiatorSize} mm radiator into the ${pos} mount.` : `This case has no mount for a ${k.radiatorSize} mm radiator.`,
-      todo: pos ? [`Screw the fans to the radiator, set to ${pos === 'top' ? 'blow up and out of the case' : 'pull air into the case'}`, `Hold it in the ${pos} mount with the tubes ${pos === 'front' || (pos === 'side' && dual) ? 'at the bottom' : 'toward the front'}`, 'Drive the long screws through the case into the radiator', 'Let the pump hang outside the case on its tubes until its step'] : ['Go back to Configure and pick another cooler or case'],
+      todo: pos ? [`Screw the fans to the radiator, set to ${pos === 'top' ? 'blow up and out of the case' : 'pull air into the case'}`, `Hold it in the ${pos} mount with the tubes ${pos === 'front' || (pos === 'side' && dual) ? 'at the bottom' : 'toward the front'}`, 'Drive the long screws through the case into the radiator'].concat(openSideRad ? [] : ['Let the pump hang outside the case on its tubes until its step']) : ['Go back to Configure and pick another cooler or case'],
       watch:'Keep the pump from being the highest point in the loop. Air collects there and makes it rattle.',
       why:[`The ${k.name} moves liquid from the pump on the CPU to this radiator, where ${k.fans} fans blow the heat away.`]};
     S.pump = {key:'pump', title:'Mount the pump', show:['paste','pump'], focus:['pump'], tags:[['cpufan', LB.cpuFan], ['pump', LB.pump]], anim:'drop',
@@ -8934,7 +9040,7 @@ function buildSteps(){
 
   const boardTodo = [b.ioShieldPreinstalled ? 'The rear I/O shield is built onto this board, so there is nothing to snap in' : 'Snap the I/O shield into the rear opening from inside the case',
     'Tilt the board in, ports first, into the rear opening', 'Lower it onto the standoffs and line up the holes', `Drive in ${b.formFactor === 'mATX' ? 'a screw at every hole' : `all ${nHoles} screws`}, snug but not tight`];
-  if (pos === 'top' && !sff) boardTodo.unshift('Before the board goes in, feed the CPU power cable up through the top cutout. The radiator leaves little room later');
+  if (pos === 'top' && !sff) boardTodo.unshift('Before the board goes in, feed the CPU power cable up through the top cutout. The top radiator leaves little room there later');
   if (sff) boardTodo.splice(1, 0, `Plug the CPU power cable into ${LB.eps[0]} now: it is hard to reach once the board is in`);
   S.board = {key:'board', title:'Install the motherboard', show:['board'], focus:['board'], tag:`${short(b.name)} → standoffs`, anim:'drop',
     screws: (() => { const s = scr('motherboard'), q = b.formFactor === 'mATX' ? null : nHoles; return s ? {text:s.text, qty:q} : {text:'Motherboard screws from the case box', qty:q}; })(),
@@ -9053,14 +9159,14 @@ function buildSteps(){
     extra:{label:'If it doesn\'t start', html:troubleHtml(b, LB, g, cpu)},
     why:['After the BIOS, check the CPU temperature, then install Windows from a USB drive.']};
 
-  return orderSteps(S, {c, k, pos, sff, bigAir, topFans: !!(sel.fanCfg.top && sel.fanCfg.top.model !== 'none' && sel.fanCfg.top.count && pos !== 'top')});
+  return orderSteps(S, {c, k, pos, sff, bigAir, openSideRad, topFans: !!(sel.fanCfg.top && sel.fanCfg.top.model !== 'none' && sel.fanCfg.top.count && pos !== 'top')});
 }
 
 // Build order: a sensible default, then moves this build needs, each with its reason shown on the step.
 function orderSteps(S, o){
-  let order = ['tools','prep','cpu','m2','ram','cooler','rad','board','pump','psu','sata','fans','cable-main','gpu','cable-gpu','cable-front','bios','finish'];
+  let order = ['tools','prep','cpu','m2','ram','cooler','board','rad','pump','psu','sata','fans','cable-main','gpu','cable-gpu','cable-front','bios','finish'];   // the radiator goes in after the board, then the pump onto the CPU
   const move = (key, after, why) => { if (!S[key] || !S[after]) return; order = order.filter(x => x !== key); order.splice(order.indexOf(after) + 1, 0, key); S[key].moved = why; };
-  if (o.pos === 'top') { order = order.filter(x => x !== 'rad'); order.splice(order.indexOf('board'), 0, 'rad'); S.rad && (S.rad.moved = 'Before the motherboard: with the board in, the top screws are hard to reach.'); }
+  if (o.openSideRad) move('rad', 'pump', 'After the pump: this radiator sits over the open side, where it would block the pump.');
   if (o.c.id === 'fractal-north') move('psu', 'prep', "Moved up: Fractal's manual installs the power supply first.");
   if (o.bigAir) move('cooler', 'cable-main', 'After the power cables: this cooler covers the CPU power plug once it is on.');
   if (o.topFans && !o.sff) move('fans', 'cable-main', 'After the CPU cable: top fans leave little room to reach the CPU power plug.');
@@ -9165,8 +9271,12 @@ function renderGuide(){
   renderSheetSummary(evaluate(sel));
 }
 function renderStepList(){
-  $('#steplist').innerHTML = steps.map((t,i) => { const ok = stepComplete(t);
-    return `<li><button type="button" data-step="${i}" class="${ok ? 'done' : ''}" ${i===stepIdx?'aria-current="step"':''}><span class="num" aria-hidden="true">${ok ? '✓' : i+1}</span><span>${esc(t.title)}<span class="sr-only">${ok ? ', checklist done' : ''}</span></span></button></li>`; }).join('');
+  const item = (t, i) => { const ok = stepComplete(t);
+    return `<li><button type="button" data-step="${i}" class="${ok ? 'done' : ''}" ${i===stepIdx?'aria-current="step"':''}><span class="num" aria-hidden="true">${ok ? '✓' : i+1}</span><span>${esc(t.title)}<span class="sr-only">${ok ? ', checklist done' : ''}</span></span></button></li>`; };
+  $('#steplist').innerHTML = steps.map(item).join('');
+  // collapsed (desktop): the step before, this one and the next; at the first or last step, the three at that end
+  const i0 = Math.max(0, Math.min(stepIdx - 1, steps.length - 3));
+  $('#stepmini').innerHTML = steps.slice(i0, i0 + 3).map((t, k) => item(t, i0 + k)).join('');
 }
 function goStep(i, focusTitle){
   const prev = stepIdx; stepIdx = Math.max(0, Math.min(steps.length-1, i));
@@ -9222,6 +9332,7 @@ $('#stepcard').addEventListener('change', e => {
   renderStepList(); ['#next', '#nextM'].forEach(q => $(q).classList.toggle('ready', stepComplete(s))); $('#stepsDone').textContent = `${steps.filter(stepComplete).length} of ${steps.length} done`;
   if (stepComplete(s)) announce(stepIdx < steps.length-1 ? `Checklist done. Next: ${steps[stepIdx+1].title}` : 'Checklist done. Your build is complete.');
 });
+$('#stepmini').addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) goStep(+b.dataset.step, true); });
 $('#steplist').addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) { goStep(+b.dataset.step, true); $('#allSteps').open = false; if (isMobile()) setSheet(true, 'a'); } });
 ['#prev', '#prevM'].forEach(q => $(q).addEventListener('click', () => goStep(stepIdx-1)));
 ['#next', '#nextM'].forEach(q => $(q).addEventListener('click', () => { if (stepIdx === steps.length-1) { setMode('config'); $('#tab-config').focus(); } else goStep(stepIdx+1); }));

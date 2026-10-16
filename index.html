@@ -1769,6 +1769,9 @@ const sheet = $('#sheet');
 function setSheet(open, tab){
   if (tab) { sheet.dataset.tab = tab; ['a','b'].forEach(t => { const b = $('#stab-'+t); b.setAttribute('aria-selected', t === tab); b.tabIndex = t === tab ? 0 : -1; }); }
   if (open != null) { sheet.dataset.open = open; $('#sheetToggle').setAttribute('aria-expanded', open); }
+  // phones: folding the sheet away ends the picker too, so the view goes back to the whole build (no fan + / − markers,
+  // no part singled out)
+  if (open === false && pickOpen && isMobile()) { closePicker(false); if (mode === 'config' && sceneReady) resetView(); }
   // open in Configure, the toggle shows only its arrow, so it needs a name of its own
   if (sheet.dataset.open === 'true' && mode === 'config') $('#sheetToggle').setAttribute('aria-label', 'Close the build panel'); else $('#sheetToggle').removeAttribute('aria-label');
   requestAnimationFrame(measureSheet); syncGuideFull();
@@ -8504,6 +8507,7 @@ function setCollapsed(side, on, save){
   const panel = side === 'L' ? $('#panelL') : $('#panelR'), btn = $('#collapse' + side), name = side === 'L' ? 'your build' : 'fit check';
   panel.classList.toggle('collapsed', on); btn.setAttribute('aria-expanded', String(!on)); btn.setAttribute('aria-label', (on ? 'Expand ' : 'Collapse ') + name);
   if (save) { try { localStorage.setItem('clearance-collapse-' + side, on ? '1' : '0'); } catch(e){} }
+  if (on && side === 'L' && pickOpen) closePicker(false);   // folding the build list away ends the picker beside it, and the view shows the whole build again
   updateViewOffset();
 }
 ['L', 'R'].forEach(side => {

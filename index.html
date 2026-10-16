@@ -157,8 +157,19 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 .allsteps summary .why{font-weight:500;font-size:.78rem;color:var(--muted)}
 .allsteps .steps{max-height:min(320px, 38vh);overflow:auto;margin:4px -8px 2px;padding:0 4px}
 #guideScroll{flex:1;min-height:0}
-.guidefoot{display:flex;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
-.guidefoot #next{flex:1}
+.guidefoot{padding:12px 14px 14px;border-top:1px solid var(--line)}
+.guidefoot:empty{display:none}
+/* desktop: the part counter is the panel's footer. The checklist above shows each part's words (the one playing is
+   highlighted, its play button replays it), so the footer is just the parts' progress, the count and Back / Next. */
+.ministep.infoot{position:static;transform:none;width:auto;margin:0;padding:0;gap:10px;background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.ministep.infoot::before,.ministep.infoot .ms-num,.ministep.infoot #msReplay{display:none}
+.ministep.infoot .ms-main{flex-wrap:nowrap;gap:10px}
+.ministep.infoot .ms-ctl{display:contents}
+.ministep.infoot #msPrev{order:-1}
+.ministep.infoot .ms-body{flex:1;text-align:center}
+.ministep.infoot .ms-count{font-size:.86rem;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink)}
+.ministep.infoot .ms-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ministep.infoot .btn{min-height:42px;padding:0 16px}
 .app[data-mode="guide"] .panel-right{display:none!important}
 #stepmini.stepmini{display:none}
 @media (min-width:1024px){#stepmini.stepmini{display:flex;padding:2px 0 0;margin:0 -8px}.allsteps[open] + #stepmini.stepmini{display:none}}
@@ -353,7 +364,6 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .more-body p{margin:0}
 .resume{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-radius:12px;background:var(--accent-soft)}
 .resume p{margin:0;flex:1 1 180px;font-size:.88rem}
-#next.ready{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent)}
 .pm-note{font-size:.8rem;color:var(--muted)}
 .pinmap{width:100%;max-width:340px;height:auto;align-self:center}
 .pinmap .pm-body{fill:#1b1e22;stroke:#3a3f45}
@@ -399,11 +409,6 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 .dock .sep{width:1px;height:24px;background:var(--line-strong);margin:0 4px}
 .movegroup{display:flex;align-items:center;gap:4px}
 .movegroup[hidden]{display:none}
-.guidebar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--gap) + env(safe-area-inset-bottom, 0px));display:flex;gap:10px;align-items:center;padding:7px;z-index:4;width:min(520px, calc(100% - 2*var(--gap)))}
-.guidebar .prog{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;padding:0 6px}
-.guidebar .prog b{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
-.guidebar .track{height:4px;border-radius:2px;background:var(--line-strong);overflow:hidden}
-.guidebar .track span{display:block;height:100%;background:var(--accent);transition:width .35s}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line-strong);background:var(--raised);font-weight:600;white-space:nowrap}
 .btn:hover{background:var(--raised-hover)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -522,8 +527,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .panel-pick{left:calc(var(--gap) + 336px + 12px);top:calc(var(--top) + var(--bar-h) + var(--gap));width:368px}
   .panel-right{right:var(--gap);top:calc(var(--top) + var(--bar-h) + var(--gap));width:330px;max-height:calc(100% - var(--top) - var(--bar-h) - 3*var(--gap) - 54px - env(safe-area-inset-bottom, 0px))}
   .app[data-mode="guide"] .panel-left{width:390px;max-height:calc(100% - var(--top) - var(--bar-h) - 2*var(--gap) - env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column}
-  .guidebar{display:none!important}
-  .app[data-mode="guide"] .panel-right{width:290px}
+    .app[data-mode="guide"] .panel-right{width:290px}
   .app.pick-fans .panel-right{display:none}
 }
 @media (min-width:1024px) and (max-width:1279px){
@@ -575,13 +579,11 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .movegroup{gap:2px}
   .tool .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .tool{padding:0;width:40px;min-width:40px;height:40px}
-  .guidebar{left:var(--gap);right:var(--gap);transform:none;width:auto;bottom:calc(var(--sheet-h) + var(--gap))}
-  .viewpop{left:var(--gap);right:var(--gap);width:auto;margin:0 auto;max-width:360px;bottom:calc(var(--sheet-h) + var(--gap) + 60px);max-height:calc(100% - var(--sheet-h) - 160px);overflow:auto}
+    .viewpop{left:var(--gap);right:var(--gap);width:auto;margin:0 auto;max-width:360px;bottom:calc(var(--sheet-h) + var(--gap) + 60px);max-height:calc(100% - var(--sheet-h) - 160px);overflow:auto}
   .app[data-mode="guide"] .viewpop{bottom:calc(var(--sheet-h) + var(--gap) + 126px)}
   .airlegend{gap:8px;padding:7px 12px;font-size:.74rem}
   .airlegend .note{display:none}
-  .guidebar .btn{padding:0 14px}
-  .guidehead{padding:6px 16px 10px}
+    .guidehead{padding:6px 16px 10px}
   /* sheet open: a short view strip on top (below the top bar in Configure), the sheet below it, taller */
   .app.strip{--pv:min(46vw, 50vh);--strip-top:calc(var(--top) + var(--bar-h) + 8px)}
   .app.strip .stage{bottom:auto;height:calc(var(--strip-top) + var(--pv))}
@@ -594,8 +596,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .app.guide-full .sheet-body{padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
   /* the guided build keeps every control in the sheet at the bottom: the step and part count on its handle, then the part's
      words, its progress and Back / Replay / Next. The floating step bar is gone and the top bar folds into one menu button. */
-  .app[data-mode="guide"] .guidebar{display:none!important}
-  .app[data-mode="guide"] .guidehead .prog{display:none}
+  .app[data-mode="guide"]   .app[data-mode="guide"] .guidehead .prog{display:none}
   .app[data-mode="guide"] .sheet-head{gap:8px;padding:2px 14px 12px}
   .app[data-mode="guide"] .sheet-toggle{min-height:44px;padding:4px 2px}
   .sheet-toggle .sum .pt{color:var(--muted);font-weight:500;white-space:nowrap}
@@ -631,8 +632,6 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   .brand .name,.sm-hide{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .brand{padding:0 8px}
   .modes button{padding:0 10px}
-  .guidebar #prev{width:44px;padding:0}
-  .guidebar #prev .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .glass,.hot{background:var(--glass-strong)} }
@@ -668,7 +667,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
     </div>
     <div class="modes glass pill" role="tablist" aria-label="Mode">
       <button role="tab" id="tab-config" aria-selected="true" aria-controls="sheet">Configure</button>
-      <button role="tab" id="tab-guide" aria-selected="false" aria-controls="sheet" tabindex="-1">Guided<span class="sm-hide"> build</span></button>
+      <button role="tab" id="tab-guide" aria-selected="false" aria-controls="sheet" tabindex="-1">Assemble</button>
     </div>
     <p class="modemsg" id="modeMsg" role="status" hidden></p>
     <div class="actions">
@@ -698,7 +697,7 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
             <details class="allsteps" id="allSteps"><summary><span>All steps</span><span class="why" id="stepsDone"></span></summary><ol class="steps" id="steplist"></ol></details><ol class="steps stepmini" id="stepmini" aria-label="Previous, current and next step"></ol>
           </div>
           <div class="panel-scroll" id="guideScroll"><div class="pad stepcard" id="stepcard"></div></div>
-          <div class="guidefoot"><button class="btn" id="prev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="lbl">Back</span></button><button class="btn primary" id="next">Next step</button></div>
+          <div class="guidefoot" id="guideFoot"></div>
         </div>
       </aside>
       <aside class="panel glass panel-pick" id="panelPick" aria-labelledby="pickTitle" hidden>
@@ -734,19 +733,13 @@ dialog.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;ga
   <div class="roamhint glass pill" id="roamHint" role="status" hidden></div>
   <div class="airlegend glass pill" id="airLegend" role="status" hidden></div>
 
-  <div class="guidebar glass pill" id="guidebar" hidden>
-    <button class="btn" id="prevM"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="lbl">Back</span></button>
-    <div class="prog"><b id="progLabelM"></b><div class="track" aria-hidden="true"><span id="progfillM"></span></div></div>
-    <button class="btn primary" id="nextM">Next step</button>
-  </div>
-
   <dialog class="about glass" id="about" aria-labelledby="aboutTitle">
     <div class="pad">
       <div class="panel-head" style="padding:0"><div class="titles"><p class="eyebrow">About</p><h2 id="aboutTitle">Clearance</h2></div>
         <button class="closebtn" id="aboutClose" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
       <p>Clearance shows a PC build in 3D before you buy it. Pick a case and parts, and it checks every fit with the dimensions each maker publishes: card length, cooler height, radiator mounts, power supply size and wattage.</p>
       <p>It also checks the build as laid out: if any two solid parts would occupy the same space, the fit check says which ones and by how much, and a red box marks the spot. Cables and liquid-cooler tubes bend around parts on their own. Zoom in close to the motherboard to see every connector named, or view any part on its own from the parts list.</p>
-      <p>Guided build walks through assembly in an order that suits your parts, zooming to each connector and naming the label printed beside it. Each step has a short checklist that saves in this browser, the screws it needs, and the one mistake to watch for.</p>
+      <p>Assemble walks through putting it together in an order that suits your parts, zooming to each connector and naming the label printed beside it. Each step has a short checklist that saves in this browser, the screws it needs, and the one mistake to watch for.</p>
       <ul>
         <li>Orbit (default): drag to turn, <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> with the view focused, hold <kbd>Space</kbd> and drag to pan. View has turn and zoom buttons too.</li>
         <li>Roam: aim with the mouse, <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to move, <kbd>E</kbd> up, <kbd>Q</kbd> down, <kbd>Shift</kbd> faster, arrow keys to turn, <kbd>Esc</kbd> to free the mouse</li>
@@ -7956,7 +7949,7 @@ function placeOverlays(){
     el.style.top = Math.max(curInsets.t + 34, p[1]) + 'px';
   });
   // keep markers off the floating controls at the bottom
-  const dk = $('#dock').getBoundingClientRect(), gb = $('#guidebar').hidden || !$('#guidebar').offsetParent ? null : $('#guidebar').getBoundingClientRect();
+  const dk = $('#dock').getBoundingClientRect(), gb = null;
   const blocked = pt => (pt[1] > dk.top - 22 && pt[1] < dk.bottom + 22 && pt[0] > dk.left - 22 && pt[0] < dk.right + 22) || (gb && pt[1] > gb.top - 22 && pt[0] > gb.left - 22 && pt[0] < gb.right + 22) || pt[1] > r.height - curInsets.b + 4;
   hotspots.forEach((h,i) => {
     const el = document.getElementById('hot'+i); if (!el) return;
@@ -8025,7 +8018,7 @@ function updateSceneDesc(){
   const parts = CATS.filter(x=>x.key!=='case' && x.key!=='fans' && isPicked(sel, x.key)).map(x => part(x.key).name + (x.key === 'gpu' && vgOn(sel) ? ' (standing upright on a riser)' : '')).join(', ');
   $('#scenedesc').textContent = mode === 'config'
     ? (isPicked(sel, 'case') ? `${c.name} in ${sel.finish}${parts ? `, holding ${parts}` : ', empty'}. The fit check lists every clearance result.` : parts ? `No case picked yet. Parts so far: ${parts}.` : 'Empty build. No parts picked yet.')
-    : `Guided build, step ${stepIdx+1} of ${steps.length}: ${steps[stepIdx].title}. ${steps[stepIdx].sum}`;
+    : `Assemble, step ${stepIdx+1} of ${steps.length}: ${steps[stepIdx].title}. ${steps[stepIdx].sum}`;
 }
 
 /* ---------- connector markers on the motherboard, shown when the camera is close to it ---------- */
@@ -8439,11 +8432,11 @@ function guideClear(){
 // the scene was rebuilt: the old timeline's parts and props are gone with it
 function guideDrop(){ GA.tl = null; GA.playing = false; }
 let _msKey = '';
-// phones: the card lives in the bottom sheet's head, with the step count, so every guide control sits in one place at the bottom
+// where the part counter lives: phones in the bottom sheet's head with the step count; desktop as the footer of the left panel
 function placeMini(){
   const el = document.getElementById('ministep'); if (!el) return; const head = isMobile(), sh = document.querySelector('.sheet-head');
-  if (head && el.parentNode !== sh) { sh.append(el); el.classList.add('inline', 'inhead'); el.style.cssText = ''; _msKey = ''; }
-  else if (!head && el.parentNode !== $('#tags').parentNode) { $('#tags').after(el); el.classList.remove('inline', 'inhead'); el.style.cssText = ''; _msKey = ''; }
+  if (head && el.parentNode !== sh) { sh.append(el); el.classList.remove('infoot'); el.classList.add('inline', 'inhead'); el.style.cssText = ''; _msKey = ''; }
+  else if (!head && el.parentNode !== $('#guideFoot')) { $('#guideFoot').append(el); el.classList.remove('inhead'); el.classList.add('inline', 'infoot'); el.style.cssText = ''; _msKey = ''; }
 }
 // the words on the sheet's handle: "Step 5 of 15 · Part 2 of 3"
 function guideSum(){
@@ -8454,13 +8447,13 @@ function guideMiniUI(){
   const el = document.getElementById('ministep'); if (!el) return; placeMini();
   const tl = GA.tl, on = mode === 'guide' && tl && tl.mini && tl.mini.length && steps[stepIdx] === tl.step;
   if (!on) {
-    // phones have no other step buttons, so a step without parts still gets the card: its title, Back and Next step
-    if (mode === 'guide' && isMobile() && steps[stepIdx]) {
+    // there are no other step buttons, so a step without parts still gets the counter: Back and Next step
+    if (mode === 'guide' && steps[stepIdx]) {
       const key = 'step:' + stepIdx; if (key === _msKey) return; _msKey = key; el.hidden = false;
       const lastStep = stepIdx === steps.length - 1;
-      $('#msBar').innerHTML = ''; $('#msBar').hidden = true; $('#msText').textContent = steps[stepIdx].title; $('#msCount').textContent = '';
+      $('#msBar').innerHTML = ''; $('#msBar').hidden = true; $('#msText').textContent = steps[stepIdx].title; $('#msCount').textContent = `Step ${stepIdx + 1} of ${steps.length}`;
       $('#msNext').querySelector('.l').textContent = lastStep ? 'Finish' : 'Next step';
-      $('#msNext').setAttribute('aria-label', lastStep ? 'Finish the guided build' : `Next step: ${steps[stepIdx + 1].title}`);
+      $('#msNext').setAttribute('aria-label', lastStep ? 'Finish assembling' : `Next step: ${steps[stepIdx + 1].title}`);
       $('#msPrev').disabled = stepIdx === 0; $('#msPrev').setAttribute('aria-label', 'Back to the previous step'); $('#msReplay').hidden = true;
       $('#sheetSum').innerHTML = guideSum(); return;
     }
@@ -8475,12 +8468,15 @@ function guideMiniUI(){
     $('#msCount').textContent = `Part ${i + 1} of ${n}`;
     const last = i === n - 1, lastStep = stepIdx === steps.length - 1;
     $('#msNext').querySelector('.l').textContent = last ? (lastStep ? 'Finish' : 'Next step') : 'Next';
-    $('#msNext').setAttribute('aria-label', last ? (lastStep ? 'Finish the guided build' : `Next step: ${steps[stepIdx + 1].title}`) : `Next part: ${s.todo[i + 1]}`);
+    $('#msNext').setAttribute('aria-label', last ? (lastStep ? 'Finish assembling' : `Next step: ${steps[stepIdx + 1].title}`) : `Next part: ${s.todo[i + 1]}`);
     $('#msPrev').disabled = i === 0 && stepIdx === 0;
     $('#msPrev').setAttribute('aria-label', i ? `Back to part ${i}` : 'Back to the previous step');
     $('#msReplay').hidden = reduceMotion || tl.mini[i][1] <= tl.mini[i][0];
     if (isMobile()) $('#sheetSum').innerHTML = guideSum();
     document.querySelectorAll('#stepcard .todo > li').forEach((li, k) => li.classList.toggle('playing', k === i));
+    // desktop: the checklist carries the part's words, so keep the one playing in view
+    if (!isMobile()) { const sc = $('#guideScroll'), li = document.querySelectorAll('#stepcard .todo > li')[i];
+      if (sc && li) { const a = li.getBoundingClientRect(), b = sc.getBoundingClientRect(); if (a.top < b.top + 8 || a.bottom > b.bottom - 8) sc.scrollTop += a.top - b.top - (b.height - a.height) / 2; } }
     if (wasHidden || el._h !== el.offsetHeight) { el._h = el.offsetHeight; updateViewOffset(); }
   }
   // how far through each part: the ones before are full, this one fills as it plays
@@ -9378,8 +9374,8 @@ const REPLAY_IC = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" s
 function renderGuide(){
   const s = steps[stepIdx], done = doneOf(s);
   const pct = ((stepIdx+1)/steps.length*100) + '%';
-  $('#progfill').style.width = pct; $('#progfillM').style.width = pct;
-  $('#progLabel').textContent = `Step ${stepIdx+1} of ${steps.length}`; $('#progLabelM').textContent = `Step ${stepIdx+1} of ${steps.length}`;
+  $('#progfill').style.width = pct;
+  $('#progLabel').textContent = `Step ${stepIdx+1} of ${steps.length}`;
   $('#stepsDone').textContent = `${steps.filter(stepComplete).length} of ${steps.length} done`;
   const fails = evaluate(sel).filter(c => c.status === 'fail');
   const notice = fails.length ? `<p class="notice" role="note"><strong>${fails.length} fit problem${fails.length>1?'s':''}.</strong> This build won't go together as configured: ${esc(fails.map(f=>f.title.toLowerCase()).join('; '))}. <button type="button" class="linkbtn" id="fixit">Fix it in Configure</button></p>` : '';
@@ -9396,8 +9392,6 @@ function renderGuide(){
     ${s.extra ? `<details class="more" id="extraBox"><summary>${esc(s.extra.label)}</summary><div class="more-body">${s.extra.html}</div></details>` : ''}
     ${why.length ? `<details class="more"><summary>Why this matters</summary><div class="more-body">${why.map(w => `<p>${esc(w)}</p>`).join('')}</div></details>` : ''}`;
   renderStepList();
-  ['#prev', '#prevM'].forEach(q => $(q).disabled = stepIdx === 0);
-  ['#next', '#nextM'].forEach(q => { $(q).textContent = stepIdx === steps.length-1 ? 'Finish' : 'Next step'; $(q).classList.toggle('ready', stepComplete(s)); });
   renderSheetSummary(evaluate(sel));
   _msKey = ''; guideMiniUI();   // the checklist was redrawn: mark the part being shown again
 }
@@ -9460,13 +9454,11 @@ $('#stepcard').addEventListener('change', e => {
   progress.done[s.key] = list; saveProgress();
   const n = s.todo.filter((_, j) => list.includes(j)).length;
   $('#todoCount').textContent = `${n} of ${s.todo.length} done`;
-  renderStepList(); ['#next', '#nextM'].forEach(q => $(q).classList.toggle('ready', stepComplete(s))); $('#stepsDone').textContent = `${steps.filter(stepComplete).length} of ${steps.length} done`;
+  renderStepList(); $('#stepsDone').textContent = `${steps.filter(stepComplete).length} of ${steps.length} done`;
   if (stepComplete(s)) announce(stepIdx < steps.length-1 ? `Checklist done. Next: ${steps[stepIdx+1].title}` : 'Checklist done. Your build is complete.');
 });
 $('#stepmini').addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) goStep(+b.dataset.step, true); });
 $('#steplist').addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) { goStep(+b.dataset.step, true); $('#allSteps').open = false; if (isMobile()) setSheet(true, 'a'); } });
-['#prev', '#prevM'].forEach(q => $(q).addEventListener('click', () => goStep(stepIdx-1)));
-['#next', '#nextM'].forEach(q => $(q).addEventListener('click', () => { if (stepIdx === steps.length-1) { setMode('config'); $('#tab-config').focus(); } else goStep(stepIdx+1); }));
 
 // the part-by-part controls on the view
 $('#msNext').addEventListener('click', () => { const tl = GA.tl; if (tl && tl.mini && GA.mi < tl.mini.length - 1) miniGo(GA.mi + 1);
@@ -9480,6 +9472,8 @@ function setMode(m){
   if (soloKey && m !== 'config') { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   mode = m; const cfg = m === 'config';
   setMenu(false);
+  // leaving Assemble: the step's motion stops and its part counter goes with it
+  if (m === 'config') { GA.playing = false; GA.hold = false; $('#ministep').hidden = true; }
   app.dataset.mode = m;
   $('#tab-config').setAttribute('aria-selected', cfg); $('#tab-guide').setAttribute('aria-selected', !cfg);
   $('#tab-config').tabIndex = cfg ? 0 : -1; $('#tab-guide').tabIndex = cfg ? -1 : 0;
@@ -9487,7 +9481,6 @@ function setMode(m){
   setViewOpen(false);
   $('#configLeft').hidden = !cfg; $('#guideLeft').hidden = cfg; $('#configRight').hidden = !cfg; if (!cfg) sheet.dataset.tab = 'a';
   $('#panelL').setAttribute('aria-labelledby', cfg ? 'leftTitle' : 'steptitle'); $('#panelR').setAttribute('aria-labelledby', cfg ? 'rightTitle' : 'stepsTitle');
-  $('#guidebar').hidden = cfg;
   $('#stab-a').textContent = cfg ? 'Parts' : 'Step'; $('#stab-b').textContent = cfg ? 'Fit check' : 'All steps';
   setSheet(null, 'a');
   ['board','cpu','paste','ram','m2','cooler','pump','radiator','gpu','psu','sata','fans-stock','fans-extra','case','cable-24','cable-eps','cable-gpu','cable-front','cable-sata'].forEach(k => scn[k] && tint(scn[k], new THREE.Color(0), 0));
@@ -9501,7 +9494,7 @@ function setMode(m){
 const tabs = [$('#tab-config'), $('#tab-guide')];
 tabs.forEach((t,i) => {
   t.addEventListener('click', () => { if ((i ? 'guide' : 'config') === mode) return;
-    if (i && !allPicked(sel)) { modeMsg(missingCats(sel).length === BUILD_CATS.length ? 'Pick your parts first. The guided build follows them step by step.' : `Pick every part before the guided build. Still to pick: ${listWords(missingCats(sel).map(catLabel))}.`); return; }
+    if (i && !allPicked(sel)) { modeMsg(missingCats(sel).length === BUILD_CATS.length ? 'Pick your parts first. Assemble follows them step by step.' : `Pick every part before Assemble. Still to pick: ${listWords(missingCats(sel).map(catLabel))}.`); return; }
     setMode(i ? 'guide' : 'config'); });
   t.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i+1)%2]; n.focus(); n.click(); e.preventDefault(); } });
 });

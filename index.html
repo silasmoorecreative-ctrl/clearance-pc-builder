@@ -9524,7 +9524,7 @@ function tick(){
   if (airMesh.visible && !reduceMotion) { stepAir(dtA); writeAir(); dirty = true; }
   for (let i = anims.length-1; i >= 0; i--) { const a = anims[i]; const t = Math.min(1, Math.max(0, (now - a.t0)/a.dur)); a.obj.position.lerpVectors(a.from, a.to, ease(t)); if (t >= 1) anims.splice(i,1); }
   if (camTween) { const t = Math.min(1, (now - camTween.t0)/camTween.dur), e = ease(t); camera.position.lerpVectors(camTween.fp, camTween.tp, e); controls.target.lerpVectors(camTween.ft, camTween.tt, e); if (t >= 1) camTween = null; }
-  const live = powered || mode === 'guide', moving = !reduceMotion;
+  const live = powered || mode === 'guide', moving = !reduceMotion, lit = powered;   /* lights only with the power on, Assemble included */
   if (runTweens(now)) dirty = true;
   if (stepRoam(dtA)) dirty = true;
   if (!GA.playing && !GA.hold && stepRopes(dtA)) dirty = true;   // a step's motion never re-settles the cables mid-play
@@ -9534,14 +9534,14 @@ function tick(){
   /* one lighting colour for every RGB part (Lighting setting). LEDs behind a diffuser read paler than the colour picked
      (most of the light comes through as a warm white), so lit parts show it mixed halfway to white */
   const lightHex = sel.lights ? glowHex(sel.lights) : null;
-  const glowBase = m => { if (m.userData.base == null) m.userData.base = m.color.getHex(); m.color.setHex(live && lightHex != null ? 0x121212 : m.userData.base); };   /* a lit diffuser shows its light's colour, not white plus colour */
-  if (scn.strips) scn.strips.children.forEach(o => { if (o.userData.glowLight) { o.intensity = live && lightHex != null ? 0.9 : 0; if (lightHex != null) o.color.setHex(lightHex); }
-    else if (o.userData.halo) { o.material.opacity = live ? 0.16 : 0; if (lightHex != null) o.material.color.setHex(lightHex); } });
-  animList.rgb.forEach(o => { glowBase(o.material); o.material.emissiveIntensity = live ? (lightHex != null ? 1 : 1.1) : 0.15; if (lightHex != null) o.material.emissive.setHex(lightHex); else if (live && moving) o.material.emissive.setHSL((now/4000 + o.position.x/200) % 1, 0.7, 0.55); });
+  const glowBase = m => { if (m.userData.base == null) m.userData.base = m.color.getHex(); m.color.setHex(lit && lightHex != null ? 0x121212 : m.userData.base); };   /* a lit diffuser shows its light's colour, not white plus colour */
+  if (scn.strips) scn.strips.children.forEach(o => { if (o.userData.glowLight) { o.intensity = lit && lightHex != null ? 0.9 : 0; if (lightHex != null) o.color.setHex(lightHex); }
+    else if (o.userData.halo) { o.material.opacity = lit ? 0.16 : 0; if (lightHex != null) o.material.color.setHex(lightHex); } });
+  animList.rgb.forEach(o => { glowBase(o.material); o.material.emissiveIntensity = lit ? (lightHex != null ? 1 : 1.1) : 0.15; if (lightHex != null) o.material.emissive.setHex(lightHex); else if (lit && moving) o.material.emissive.setHSL((now/4000 + o.position.x/200) % 1, 0.7, 0.55); });
   animList.rgbMats.forEach((m, i) => { const on = powered, k = m.userData.rgbScale || 1; if (!m.userData.rgbScale) glowBase(m); m.emissiveIntensity = (on ? 1.1 : 0.12) * k;   /* rgbScale: a dimmer part of a light (lit blades); rgbFixed: one set colour instead of the cycle */
     if (lightHex != null) m.emissive.setHex(lightHex); else if (m.userData.rgbFixed != null) m.emissive.setHex(m.userData.rgbFixed); else if (on && moving) m.emissive.setHSL((now/3500 + i*0.07) % 1, 0.75, 0.55); });
-  animList.lit.forEach(o => { o.material.emissiveIntensity = live ? 1 : 0.1; });
-  animList.screen.forEach(o => { if (o.material.isMeshBasicMaterial) o.material.color.setScalar(live ? 1 : 0.3); else o.material.emissiveIntensity = live ? 1 : 0.25; });
+  animList.lit.forEach(o => { o.material.emissiveIntensity = lit ? 1 : 0.1; });
+  animList.screen.forEach(o => { if (o.material.isMeshBasicMaterial) o.material.color.setScalar(lit ? 1 : 0.3); else o.material.emissiveIntensity = lit ? 1 : 0.25; });
   if (tickScreen(now, powered && moving)) dirty = true;   /* the pump screen's art: plays while the build runs, unless motion is reduced; the power button stops it */
   if (mode === 'guide' && steps[stepIdx]) {
     const pulse = reduceMotion ? 0.45 : 0.3 + 0.25*Math.sin(now/300);
@@ -10893,7 +10893,8 @@ function troubleHtml(b, LB, g, cpu){
     DRAM:`Reseat the memory in ${LB.ram2.join(' and ')} until the latches click. On the first boot, wait a few minutes first: it may be training.`,
     VGA:`Check the ${/12V-2x6/.test(g.powerConnector) ? '12V-2x6' : 'PCIe'} power plug at the card, and that the monitor is plugged into the card.`,
     BOOT:'Normal before Windows is installed. Enter the BIOS and check the SSD is listed.'};
-  const rows = d ? d.leds.map(l => `<tr><th scope="row"><span class="led" style="--led:${({red:'#e5162a', yellow:'#e0a400', white:'#c9ced4', green:'#1f9d55', 'yellow green':'#8fbf1a'})[d.colors[l]] || '#999'}" aria-hidden="true"></span>${l} <span class="why">(${d.colors[l]})</span></th><td>${fix[l] || ''}</td></tr>`).join('') : '';
+  const col = l => d.colors && d.colors[l];   // a manual that doesn't give the colours: show the light's name only
+  const rows = d ? d.leds.map(l => `<tr><th scope="row"><span class="led" style="--led:${({red:'#e5162a', yellow:'#e0a400', white:'#c9ced4', green:'#1f9d55', 'yellow green':'#8fbf1a'})[col(l)] || '#999'}" aria-hidden="true"></span>${l}${col(l) ? ` <span class="why">(${col(l)})</span>` : ''}</th><td>${fix[l] || ''}</td></tr>`).join('') : '';
   return `${d ? `<p class="pm-note">${esc(d.name)} lights${d.where ? `, ${esc(d.where)}` : ''}. The one that stays on shows where startup stopped.</p>
     <table class="trouble"><thead><tr><th scope="col">Stays lit</th><th scope="col">Check</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="pm-note">This board has no debug lights, so go through these checks in order.</p>'}
     <ul class="trouble-list"><li><strong>Nothing at all:</strong> power cord in, power supply switch on I, and the power switch lead on the right ${esc(LB.fpanel)} pins.</li>

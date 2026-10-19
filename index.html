@@ -136,6 +136,9 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 .ownerline{margin:2px 0 0;font-size:.82rem;line-height:1.35;color:var(--muted)}
 .ownertag{position:absolute;z-index:4;left:calc(var(--inset-l, 0px) + 14px);top:calc(var(--inset-t, 0px) + 10px);margin:0;padding:6px 12px;font-size:.78rem;font-weight:600;color:var(--ink);display:flex;gap:7px;align-items:center;pointer-events:none;max-width:calc(100% - 28px)}
 .ownertag[hidden]{display:none}
+/* phones: centred under the top bar; wider screens: floats just above the case like the part markers and moves with the view */
+@media (max-width:1023px){ .ownertag{left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);white-space:nowrap} }
+@media (min-width:1024px){ .ownertag{transform:translate(0,-50%);white-space:nowrap} .ownertag.off{display:none} }
 .app.roam .ownertag{display:none}
 /* the Roam hint and the owner tag sit over the moving view: a plain backing instead of a live blur, which costs a redraw of the blur every frame (very slow on software rendering) */
 .roamhint,.ownertag,.app.roam .hot{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:var(--glass-strong)!important}   /* Roam has its own hint at the top */
@@ -826,7 +829,7 @@ details.more[open] summary::after{transform:rotate(-135deg)}
 
   <div class="viewpop glass" id="viewPop" role="group" aria-label="View options" hidden></div>
   <template id="camBtns"><button class="tool" data-act="left" aria-label="Rotate left" title="Rotate left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button><button class="tool" data-act="right" aria-label="Rotate right" title="Rotate right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button><button class="tool" data-act="in" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M20 20l-4-4"/></svg></button><button class="tool" data-act="out" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-4-4"/></svg></button><button class="tool" data-act="reset" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button></template>
-  <p class="ownertag glass pill" id="ownerTag" hidden><span class="od" aria-hidden="true"></span>Silas Moore's PC · the creator of Clearance</p>
+  <p class="ownertag glass pill" id="ownerTag" hidden><span class="od" aria-hidden="true"></span>Silas Moore's PC</p>
   <div class="crosshair" id="crosshair" aria-hidden="true" hidden></div>
   <div class="roamhint glass pill" id="roamHint" role="status" hidden></div>
   <div class="airlegend glass pill" id="airLegend" role="status" hidden></div>
@@ -9510,7 +9513,19 @@ function placeOverlays(){
     if (!p || p[1] < curInsets.t + 10 || blocked(p)) { el.style.display = 'none'; return; }
     el.style.display = ''; el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px';
   });
+  placeOwnerTag(r);
   roamAim();
+}
+// Silas's own build: on wider screens the "Silas Moore's PC" pill floats a little above the case, over its glass-side top edge
+const _ot = new THREE.Vector3();
+function placeOwnerTag(r){
+  const el = document.getElementById('ownerTag'); if (!el || el.hidden) return;
+  if (isMobile()) { el.style.left = el.style.top = ''; el.classList.remove('off'); return; }
+  if (!L || !isShown(rig)) { el.classList.add('off'); return; }
+  rig.localToWorld(_ot.set(-36, L.H * 0.9, L.W)); const p = toScreen(_ot, r);   /* just off the case's top front corner, glass side */
+  if (!p || p[1] < curInsets.t + 30 || p[0] < curInsets.l || p[0] > r.width - curInsets.r) { el.classList.add('off'); return; }
+  el.classList.remove('off'); const w = el.offsetWidth;   /* its left end sits at the corner, the pill reads outward from the case */
+  el.style.left = Math.max(curInsets.l + 8, Math.min(r.width - curInsets.r - w - 8, p[0])) + 'px'; el.style.top = p[1] + 'px';
 }
 function isShown(o){ while (o) { if (!o.visible) return false; o = o.parent; } return true; }
 

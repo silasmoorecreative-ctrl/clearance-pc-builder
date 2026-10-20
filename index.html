@@ -102,6 +102,12 @@ button{cursor:pointer}
 /* ---------- panels ---------- */
 .panel{display:flex;flex-direction:column;overflow:hidden}
 .panel-scroll{overflow:auto;overscroll-behavior:contain;min-height:0;flex:1}
+/* a visible scroll bar on the scrolling panels, so a cut-off list reads as scrollable (macOS hides overlay bars until you scroll) */
+.panel-scroll,.dd-list{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.panel-scroll::-webkit-scrollbar,.dd-list::-webkit-scrollbar{width:10px}
+.panel-scroll::-webkit-scrollbar-track,.dd-list::-webkit-scrollbar-track{background:transparent}
+.panel-scroll::-webkit-scrollbar-thumb,.dd-list::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:999px;border:3px solid transparent;background-clip:padding-box}
+.panel-scroll::-webkit-scrollbar-thumb:hover,.dd-list::-webkit-scrollbar-thumb:hover{background-color:var(--muted)}
 .pad{padding:18px}
 .eyebrow{font-family:var(--font-display);font-stretch:112%;text-transform:uppercase;letter-spacing:.09em;font-size:.7rem;font-weight:700;color:var(--muted);margin:0}
 h2{font-family:var(--font-display);font-stretch:112%;font-size:1.12rem;font-weight:720;margin:0;line-height:1.2;text-wrap:balance}
@@ -138,17 +144,17 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 /* Extras: LED strips, power cables and one lighting colour (Silas's PC turns them on; every other build starts without them) */
 .extras{margin:4px 10px 0;padding:14px 10px 6px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
 .extras[hidden]{display:none}
-.extras .switches{margin:0 -8px}
-.exrow{display:flex;flex-direction:column;gap:6px;border:0;margin:0;padding:0;min-width:0}
-.exrow .seg{gap:6px}
-.excolor{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.excolor input[type=color]{width:44px;height:36px;padding:2px;border:1px solid var(--line-strong);border-radius:10px;background:var(--raised);cursor:pointer}
-.excolor .v{font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.exrow{display:flex;flex-direction:column;gap:10px;min-width:0}
+.exrow > .dd-l{margin:0}
+.exlight{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:end}
+.exsw{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-strong);margin-bottom:8px}
+.excol{width:44px;height:38px;padding:2px;border:1px solid var(--line-strong);border-radius:10px;background:var(--raised);cursor:pointer}
 .ownertag{position:absolute;z-index:4;left:calc(var(--inset-l, 0px) + 14px);top:calc(var(--inset-t, 0px) + 10px);margin:0;padding:6px 12px;font-size:.78rem;font-weight:600;color:var(--ink);display:flex;gap:7px;align-items:center;pointer-events:none;max-width:calc(100% - 28px)}
 .ownertag[hidden]{display:none}
 /* phones: centred under the top bar; wider screens: floats just above the case like the part markers and moves with the view */
-@media (max-width:1023px){ .ownertag{left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);white-space:nowrap} }
-@media (min-width:1024px){ .ownertag{transform:translate(0,-50%);white-space:nowrap} .ownertag.off{display:none} }
+.ownertag{transform:translate(0,-50%);white-space:nowrap;font-size:.92rem!important;padding:9px 16px!important;gap:9px!important}
+.ownertag.off{display:none}
+.ownertag .od{width:10px!important;height:10px!important}
 .app.roam .ownertag{display:none}
 /* the Roam hint and the owner tag sit over the moving view: a plain backing instead of a live blur, which costs a redraw of the blur every frame (very slow on software rendering) */
 .roamhint,.ownertag,.app.roam .hot{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:var(--glass-strong)!important}   /* Roam has its own hint at the top */
@@ -648,6 +654,9 @@ details.more[open] summary::after{transform:rotate(-135deg)}
   .app[data-mode="config"] .sheet[data-tab="a"] .panel-right,.app[data-mode="config"] .sheet[data-tab="b"] .panel-left{display:none}
   .app[data-mode="config"].pick-fans .sheet[data-tab="b"] .panel-right{display:block}
   #configLeft .panel-head .eyebrow,#configRight .sh-top{display:none}
+  /* the build list scrolls inside its panel on short screens (the wrapper must shrink with the panel for that) */
+  #configLeft,#configRight{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+  #configLeft[hidden],#configRight[hidden]{display:none}
 }
 @media (min-width:1024px) and (max-width:1279px){
   .panel-pick{left:var(--gap);width:336px}
@@ -897,7 +906,7 @@ const sel = {
   /* the default build is Silas's own PC */
   case:'corsair-5000d-airflow', finish:'White', board:'msi-mag-b650-tomahawk-wifi', cpu:'ryzen-7-7700x',
   cooler:'nzxt-kraken-360-2023', radPos:'side', radEnd:null, ram:'corsair-vengeance-rgb-ddr5-32gb-6000', gpu:'gigabyte-rtx-4070-windforce-oc',
-  storage:'samsung-970-evo-500gb', psu:'corsair-rm850e-2025', fans:'stock', psuFan:null, pumpDir:'front', hoseDir:'glass', gpuMount:'horizontal', radAt:0, radFans:'nzxt-f120-rgb-core', radFanColor:'White', cables:'white', lights:'#FFA032', strips:true, epsOne:true, usb3:false, ownPlate:true, screenArt:true, drives:['samsung-980-500gb', 'wd-pc-sn520-256gb'],
+  storage:'samsung-970-evo-500gb', psu:'corsair-rm850e-2025', fans:'stock', psuFan:null, pumpDir:'front', hoseDir:'glass', gpuMount:'horizontal', radAt:0, radFans:'nzxt-f120-rgb-core', radFanColor:'White', cables:'white', combs:true, lights:'#FFA032', lightsBy:{}, strips:true, epsOne:true, usb3:false, ownPlate:true, screenArt:true, drives:['samsung-980-500gb', 'wd-pc-sn520-256gb'],
   none:[]   // parts not picked yet (after Start over): they stay in the scene as placeholders, hidden and left out of every check
 };
 const BUILD_CATS = ['case', 'board', 'cpu', 'cooler', 'ram', 'gpu', 'storage', 'psu'];
@@ -905,8 +914,11 @@ const BUILD_CATS = ['case', 'board', 'cpu', 'cooler', 'ram', 'gpu', 'storage', '
 const HOME_PARTS = Object.assign({drives:(sel.drives || []).join()}, ...BUILD_CATS.map(k => ({[k]:sel[k]})));
 /* Silas's own extras: they come with his preset and nobody else's build. Start over turns them all off; swapping his case
    takes the LED strips out (they were fitted to it); anyone can turn the strips, cables or lighting back on under Extras */
-const PRESET_EXTRAS = {strips:true, cables:'white', lights:'#FFA032', usb3:false, epsOne:true, ownPlate:true, screenArt:true};
-const PLAIN_EXTRAS = {strips:false, cables:'psu', lights:null, usb3:true, epsOne:false, ownPlate:false, screenArt:false};
+const PRESET_EXTRAS = {strips:true, cables:'white', combs:true, lights:'#FFA032', lightsBy:{}, usb3:false, epsOne:true, ownPlate:true, screenArt:true};
+const PLAIN_EXTRAS = {strips:false, cables:'black', combs:false, lights:'rainbow', lightsBy:{}, usb3:true, epsOne:false, ownPlate:false, screenArt:false};
+/* lighting: one colour for all RGB parts (or the colour cycle, 'rainbow'), and any part group can have its own */
+const LIGHT_GROUPS = [['fans', 'Fans'], ['cooler', 'CPU cooler'], ['ram', 'Memory'], ['gpu', 'Graphics card'], ['board', 'Motherboard'], ['case', 'Case'], ['strips', 'LED strips']];
+const lightOf = (s, grp) => (s.lightsBy && s.lightsBy[grp]) || s.lights || 'rainbow';
 const isHomeBuild = s => BUILD_CATS.every(k => isPicked(s, k) && s[k] === HOME_PARTS[k]) && (s.drives || []).join() === HOME_PARTS.drives;
 // case fans belong to the case, so they count as picked once the case is
 const isPicked = (s, k) => !(s.none || []).includes(k === 'fans' ? 'case' : k);
@@ -2145,7 +2157,7 @@ function placeHotCard(){
 function removePart(cat){
   const label = PART_LABEL(cat);
   if (cat === 'fans') Object.values(sel.fanCfg || {}).forEach(f => { if (!f) return; f.model = 'none'; setSlots(f, (f.slots || []).map(() => false)); });
-  else { sel.none = [...new Set((sel.none || []).concat(cat))]; normalizeEmpty(sel); }
+  else { const wasHome = isHomeBuild(sel); sel.none = [...new Set((sel.none || []).concat(cat))]; normalizeEmpty(sel); leaveHome(wasHome); }
   if (preview) preview = null;
   closeHotCard(false); if (pickOpen && activeCat === cat) closePicker(false);
   rebuildScene(); refreshUI(); updateSceneDesc();
@@ -2418,11 +2430,15 @@ const VIEW_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" s
 
 /* ---------- preview: try a part on its own before it goes into the build ---------- */
 let preview = null;   // {cat, id, saved}: the build as it was before the preview
+// once a part change makes the build stop being Silas's PC, his extras go and the usual defaults come in (black cables, rainbow lighting)
+function leaveHome(wasHome){ if (wasHome && !isHomeBuild(sel)) Object.assign(sel, JSON.parse(JSON.stringify(PLAIN_EXTRAS))); }
 function choosePart(cat, id){
+  const wasHome = isHomeBuild(sel);
   sel[cat] = id; sel.none = (sel.none || []).filter(k => k !== cat);
   if (cat === 'case' && !byId.cases[id].colors.includes(sel.finish)) sel.finish = byId.cases[id].colors[0];
   if (cat === 'case') { sel.fanCfg = fullFanCfg(id); sel.psuFan = null; if (id !== HOME_PARTS.case) sel.strips = false; }   /* Silas's strips were fitted to his case */
   if (cat === 'cooler' || cat === 'case') { sel.radPos = null; sel.radEnd = null; }
+  leaveHome(wasHome);
 }
 function fitFanEverywhere(id){
   const c = byId.cases[sel.case], mo = mountOptions(c), model = FAN_MODELS[id];
@@ -2552,7 +2568,7 @@ $('#sobox') && $('#sobox').addEventListener('click', e => {
 
 /* save and share: the build lives in the page address (#b=...) and in this browser, so a reload or a shared link opens it */
 const DEFAULT_SEL = JSON.parse(JSON.stringify(sel));
-const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'radAt', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'radEnd', 'fanCfg', 'none', 'radFans', 'radFanColor', 'cables', 'lights', 'strips', 'ownPlate', 'screenArt', 'drives', 'epsOne', 'usb3'];
+const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'radAt', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'radEnd', 'fanCfg', 'none', 'radFans', 'radFanColor', 'cables', 'combs', 'lights', 'lightsBy', 'strips', 'ownPlate', 'screenArt', 'drives', 'epsOne', 'usb3'];
 const b64u = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = t => decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))));
 // only what differs from the starting build goes in the link (the case always does), which keeps links short
@@ -2574,13 +2590,16 @@ function decodeBuild(code){
     out.radAt = Number.isInteger(o.radAt) && o.radAt >= 0 && o.radAt < 4 ? o.radAt : 0;
     if (o.psuFan === null || o.psuFan === 'up' || o.psuFan === 'down') out.psuFan = o.psuFan;
     if (typeof o.fans === 'string') out.fans = o.fans;
-    if (o.cables === 'white' || o.cables === 'psu') out.cables = o.cables;
+    if (o.cables === 'white' || o.cables === 'black' || o.cables === 'psu') out.cables = o.cables === 'psu' ? 'black' : o.cables;
+    if (typeof o.combs === 'boolean') out.combs = o.combs;
+    const okLight = v => v === 'rainbow' || (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v));
+    if (o.lightsBy && typeof o.lightsBy === 'object') { out.lightsBy = {}; LIGHT_GROUPS.forEach(([g]) => { if (okLight(o.lightsBy[g])) out.lightsBy[g] = o.lightsBy[g]; }); }
     if (typeof o.strips === 'boolean') out.strips = o.strips;
     if (typeof o.epsOne === 'boolean') out.epsOne = o.epsOne;
     if (typeof o.usb3 === 'boolean') out.usb3 = o.usb3;
     ['ownPlate', 'screenArt'].forEach(k => { if (typeof o[k] === 'boolean') out[k] = o[k]; });
     if (Array.isArray(o.drives)) out.drives = o.drives.filter(id => byId.storage[id] && byId.storage[id].type === 'M.2 NVMe').slice(0, 4);
-    if (o.lights === null || (typeof o.lights === 'string' && /^#[0-9a-f]{6}$/i.test(o.lights))) out.lights = o.lights;
+    if (o.lights === null || o.lights === 'rainbow') out.lights = 'rainbow'; else if (typeof o.lights === 'string' && /^#[0-9a-f]{6}$/i.test(o.lights)) out.lights = o.lights;
     if (o.radFans === null) out.radFans = null;
     if (typeof o.radFans === 'string' && FAN_MODELS[o.radFans]) { out.radFans = o.radFans; if (typeof o.radFanColor === 'string') out.radFanColor = o.radFanColor; }
     out.none = Array.isArray(o.none) ? BUILD_CATS.filter(k => o.none.includes(k)) : [];
@@ -2613,32 +2632,36 @@ $('#shareBtn') && $('#shareBtn').addEventListener('click', async () => {
 });
 const _restored = restoreBuild();
 
-/* ---------- Extras: LED strips, power cables, one lighting colour ---------- */
+/* ---------- Extras: power cable colour and lighting (all parts at once, or each lit part on its own) ---------- */
+const RAINBOW_SW = 'conic-gradient(#ff3b30, #ffcc00, #34c759, #00c7be, #007aff, #af52de, #ff2d55, #ff3b30)';
+function lightRow(name, label, value, follow){
+  const mode = value == null ? 'all' : value === 'rainbow' ? 'rainbow' : 'custom', hex = mode === 'custom' ? value : null;
+  const opts = (follow ? [{v:'all', t:'Same as all lighting'}] : []).concat([{v:'rainbow', t:'Rainbow'}, {v:'custom', t:'A colour I pick'}]);
+  const shown = mode === 'all' ? follow : value, sw = shown === 'rainbow' ? RAINBOW_SW : shown;
+  return `<div class="exlight"><span class="exsw" style="background:${sw}" aria-hidden="true"></span>
+    ${ddHTML({name:'exl-' + name, label, value:mode, options:opts, small:true})}
+    ${mode === 'custom' ? `<input type="color" class="excol" data-lg="${name}" value="${esc(hex)}" aria-label="${esc(label)} colour">` : ''}</div>`;
+}
 function renderExtras(){
   const el = $('#extras'); if (!el) return;
   el.hidden = !isPicked(sel, 'case'); if (el.hidden) { el.innerHTML = ''; return; }
-  const lt = sel.lights || '#ffa032', own = !sel.lights;
+  const all = sel.lights || 'rainbow', groups = LIGHT_GROUPS.filter(([g]) => rgbGroups.has(g));
   el.innerHTML = `<p class="eyebrow" id="exTitle">Extras</p>
-    <ul class="switches"><li><button type="button" role="switch" data-ex="strips" aria-checked="${!!sel.strips}"><span class="txt"><span class="l">LED strips</span>
-      <span class="h">Bare strips along the glass edges, diffused ones round the board and down the back wall</span></span><span class="track" aria-hidden="true"><i></i></span></button></li></ul>
-    <fieldset class="exrow"><legend class="dd-l">Power cables</legend><div class="seg">
-      <label><input type="radio" name="excab" value="psu" ${sel.cables !== 'white' ? 'checked' : ''}>The power supply's own</label>
-      <label><input type="radio" name="excab" value="white" ${sel.cables === 'white' ? 'checked' : ''}>White extensions</label></div></fieldset>
-    <div class="exrow"><label class="dd-l" for="exLight">Lighting colour</label><div class="excolor">
-      <input type="color" id="exLight" value="${esc(lt)}" aria-describedby="exLightV"><span class="v" id="exLightV">${own ? "Each part's own lighting" : esc(sel.lights.toUpperCase())}</span>
-      ${own ? '' : `<button type="button" class="btn small" data-ex="lightsOff">Use each part's own</button>`}</div></div>`;
+    ${ddHTML({name:'excab', label:'Power cables', value:sel.cables === 'white' ? 'white' : 'black', options:[{v:'black', t:'Black'}, {v:'white', t:'White'}]})}
+    ${groups.length ? `<div class="exrow"><p class="dd-l">Lighting</p>${lightRow('all', 'All lighting', all, null)}
+      ${groups.length > 1 ? groups.map(([g, t]) => lightRow(g, t, (sel.lightsBy || {})[g] || null, all)).join('') : ''}</div>` : ''}`;
 }
-function setExtra(k, v, rebuild){
-  sel[k] = v; if (rebuild) rebuildScene(); refreshUI(); invalidate(false);
-}
-$('#extras').addEventListener('click', e => { const b = e.target.closest('[data-ex]'); if (!b) return;
-  if (b.dataset.ex === 'strips') { const on = !sel.strips; setExtra('strips', on, true); announce(on ? 'LED strips on' : 'LED strips off'); const nb = $('#extras [data-ex="strips"]'); if (nb) nb.focus(); }
-  if (b.dataset.ex === 'lightsOff') { setExtra('lights', null, false); announce("Each part uses its own lighting"); const i = $('#exLight'); if (i) i.focus(); } });
-$('#extras').addEventListener('change', e => {
-  if (e.target.name === 'excab') { setExtra('cables', e.target.value, true); announce(e.target.value === 'white' ? 'White cable extensions' : "The power supply's own cables");
-    const r = $(`#extras input[name="excab"][value="${e.target.value}"]`); if (r) r.focus(); }
-  if (e.target.id === 'exLight') { setExtra('lights', e.target.value.toLowerCase(), false); announce('Lighting colour ' + e.target.value.toUpperCase()); const i = $('#exLight'); if (i) i.focus(); } });
-$('#extras').addEventListener('input', e => { if (e.target.id === 'exLight') { sel.lights = e.target.value.toLowerCase(); const v = $('#exLightV'); if (v) v.textContent = sel.lights.toUpperCase(); invalidate(false); } });
+DD_ON.excab = v => { sel.cables = v; rebuildScene(); refreshUI(); announce(v === 'white' ? 'White power cables' : 'Black power cables'); };
+DD_ON['exl-'] = (v, _, d) => { const g = d.dataset.dd.slice(4);
+  if (g === 'all') sel.lights = v === 'custom' ? (/^#/.test(sel.lights || '') ? sel.lights : '#ffffff') : 'rainbow';
+  else { sel.lightsBy = Object.assign({}, sel.lightsBy); if (v === 'all') delete sel.lightsBy[g]; else sel.lightsBy[g] = v === 'custom' ? (/^#/.test(sel.lightsBy[g] || '') ? sel.lightsBy[g] : (/^#/.test(sel.lights || '') ? sel.lights : '#ffffff')) : 'rainbow'; }
+  refreshUI(); invalidate(false);
+  const c = $(`#extras .excol[data-lg="${g}"]`); if (c && v === 'custom') c.focus(); };
+const setLight = (g, hex) => { if (g === 'all') sel.lights = hex; else sel.lightsBy = Object.assign({}, sel.lightsBy, {[g]:hex}); };
+$('#extras').addEventListener('input', e => { const c = e.target.closest('.excol'); if (!c) return; setLight(c.dataset.lg, c.value.toLowerCase());
+  const sw = c.parentElement.querySelector('.exsw'); if (sw) sw.style.background = c.value; invalidate(false); });
+$('#extras').addEventListener('change', e => { const c = e.target.closest('.excol'); if (!c) return; const g = c.dataset.lg; setLight(g, c.value.toLowerCase()); refreshUI(); invalidate(false);
+  announce('Lighting colour ' + c.value.toUpperCase()); const n = $(`#extras .excol[data-lg="${g}"]`); if (n) n.focus(); });
 // back to Silas's own PC, extras and all
 function loadHomeBuild(){
   if (preview) dropPreview();
@@ -7280,7 +7303,7 @@ function vgCoverOut(cv){
 
 /* ---------- assemble ---------- */
 let assembly = null;
-let animList = {rotors:[], rgb:[], lit:[], screen:[], rgbMats:[]};     // board + parts that go on it
+let animList = {rotors:[], rgb:[], lit:[], screen:[], rgbMats:[]}, rgbGroups = new Set();     // board + parts that go on it
 let L = null;
 const limitPlanes = {};
 function disposeTree(o){ o.traverse(n => { if (n.geometry && !n.geometry.userData.shared) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => { if (m.map && !(m.map.userData && m.map.userData.shared)) m.map.dispose(); m.dispose(); }); }); }
@@ -7338,7 +7361,12 @@ function rebuildScene(){
   rig.traverse(o => { if (o.isMesh) { const m = o.material, clear = m.transparent || o.userData.decal || m.isMeshBasicMaterial; o.castShadow = !clear; o.receiveShadow = !clear; } });
   blob.scale.set(L.D * 1.45, L.W * 2.3, 1);
   animList = {rotors:[], rgb:[], lit:[], screen:[], rgbMats:[]};
+  { const KG = {'fans-stock':'fans', 'fans-extra':'fans', radiator:'fans', pump:'cooler', cooler:'cooler', ram:'ram', gpu:'gpu', 'gpu-mount':'gpu', board:'board', strips:'strips'}, owner = new Map();
+    for (const k in scn) if (scn[k] && scn[k].isObject3D) owner.set(scn[k], k);
+    const grpOf = o => { for (let x = o; x && x !== rig; x = x.parent) { const k = owner.get(x); if (k) return KG[k] || 'case'; } return 'case'; };
+    rig.traverse(o => { if (o.userData.rgbMats) o.userData.rgbMats.forEach(m => { m.userData.rgbGrp = grpOf(o); }); if (o.userData.rgb || o.userData.glowLight || o.userData.halo) o.userData.rgbGrp = grpOf(o); }); }
   rig.traverse(o => { if (o.userData.rgbMats) animList.rgbMats.push(...o.userData.rgbMats); if (o.userData.rotor) animList.rotors.push(o.userData.rotor); if (o.userData.rgb && o.material) animList.rgb.push(o); if (o.userData.lit) animList.lit.push(o); if (o.userData.screen && o.material.emissive) animList.screen.push(o); });
+  rgbGroups = new Set([...animList.rgb.map(o => o.userData.rgbGrp), ...animList.rgbMats.map(m => m.userData.rgbGrp)].filter(Boolean));
   invalidate();
   rig.updateMatrixWorld(true);
   applyHighlights();
@@ -8838,8 +8866,9 @@ function wiresMesh(R){
   // the plain mesh the solver made stays as the holder, drawing the wires
   const old = R.mesh.geometry; R.mesh.geometry = wg; old.dispose();
   /* white sleeved extensions with black combs (sel.cables === 'white'): the 24-pin, CPU and graphics card runs */
-  const ext = sel.cables === 'white' && R.mesh.userData.rope.ext;
-  const col = ext ? 0xeceeed : S.color != null ? S.color : 0x18191b;
+  /* Power cables: Black (as they come) or White, the same cables recoloured; Silas's own white extensions are braided with black combs */
+  const white = sel.cables === 'white' && R.mesh.userData.rope.ext, ext = white && sel.combs;
+  const col = white ? 0xeceeed : S.color != null ? S.color : 0x18191b;
   R.mesh.material = ext ? [wireMat('braid', col), wireMat('braid', col)] : [wireMat(S.style === 'sleeved' ? 'braid' : 'emboss', col), wireMat('plain', col)];
   if (R.combMesh) { R.mesh.remove(R.combMesh); R.combMesh = null; }
   if (ext) { let n0 = Infinity, n1 = -Infinity, b0 = Infinity, b1 = -Infinity; const rr0 = Array.isArray(S.r) ? Math.max(...S.r) : S.r;
@@ -9278,8 +9307,8 @@ function buildStrips(c, L, F){
   /* the glow inside the case: a few soft lights in the lit parts' colour, so white panels pick up the light as in photos
      (always there, dark until the build runs, so turning them on never recompiles the materials) */
   [[L.D * 0.25, L.H * 0.55, L.W * 0.45], [L.D * 0.55, L.H - 60, L.W * 0.5], [L.D * 0.6, L.H * 0.62, L.tray + 40], [L.D - 40, L.H * 0.5, L.W * 0.4]].forEach(p => {
-    const pl = new THREE.PointLight(0xffd9ad, 0, 420, 2); pl.position.set(...p); pl.userData.glowLight = true; g.add(pl); });
-  if (!sel.strips) return reg('strips', g, 'case');
+    const pl = new THREE.PointLight(0xffd9ad, 0, 420, 2); pl.position.set(...p); pl.userData.glowLight = true; pl.userData.rgbGrp = 'strips'; g.add(pl); });
+  if (!sel.strips || !isHomeBuild(sel)) return reg('strips', g, 'case');   /* Silas's own strips: only on his PC */
   const zg = L.W - L.t - 9, x0 = (L.geo.glass ? L.geo.glass.x0 : 30) + 12, x1 = L.D - 14;
   const tape = M(0xf2f3f1, {roughness:0.6, emissive:0xffa032, emissiveIntensity:0.15}), ledM = M(0xfff6e8, {roughness:0.3, emissive:0xffa032, emissiveIntensity:0.15});
   const leds = [];
@@ -9572,11 +9601,10 @@ function placeOverlays(){
   placeOwnerTag(r);
   roamAim();
 }
-// Silas's own build: on wider screens the "Silas Moore's PC" pill floats a little above the case, over its glass-side top edge
+// Silas's own build: the "Silas Moore's PC" pill floats just off the case's top front corner and moves with the view, like the part markers
 const _ot = new THREE.Vector3();
 function placeOwnerTag(r){
   const el = document.getElementById('ownerTag'); if (!el || el.hidden) return;
-  if (isMobile()) { el.style.left = el.style.top = ''; el.classList.remove('off'); return; }
   if (!L || !isShown(rig)) { el.classList.add('off'); return; }
   rig.localToWorld(_ot.set(-36, L.H * 0.9, L.W)); const p = toScreen(_ot, r);   /* just off the case's top front corner, glass side */
   if (!p || p[1] < curInsets.t + 30 || p[0] < curInsets.l || p[0] > r.width - curInsets.r) { el.classList.add('off'); return; }
@@ -9612,13 +9640,18 @@ function tick(){
   if (powered && moving) animList.rotors.forEach(r => { r.rotation.z += 0.35 * (r.userData.spin || 1); });
   /* one lighting colour for every RGB part (Lighting setting). LEDs behind a diffuser read paler than the colour picked
      (most of the light comes through as a warm white), so lit parts show it mixed halfway to white */
-  const lightHex = sel.lights ? glowHex(sel.lights) : null;
-  const glowBase = m => { if (m.userData.base == null) m.userData.base = m.color.getHex(); m.color.setHex(lit && lightHex != null ? 0x121212 : m.userData.base); };   /* a lit diffuser shows its light's colour, not white plus colour */
-  if (scn.strips) scn.strips.children.forEach(o => { if (o.userData.glowLight) { o.intensity = lit && lightHex != null ? 0.9 : 0; if (lightHex != null) o.color.setHex(lightHex); }
-    else if (o.userData.halo) { o.material.opacity = lit ? 0.16 : 0; if (lightHex != null) o.material.color.setHex(lightHex); } });
-  animList.rgb.forEach(o => { glowBase(o.material); o.material.emissiveIntensity = lit ? (lightHex != null ? 1 : 1.1) : 0.15; if (lightHex != null) o.material.emissive.setHex(lightHex); else if (lit && moving) o.material.emissive.setHSL((now/4000 + o.position.x/200) % 1, 0.7, 0.55); });
-  animList.rgbMats.forEach((m, i) => { const on = powered, k = m.userData.rgbScale || 1; if (!m.userData.rgbScale) glowBase(m); m.emissiveIntensity = (on ? 1.1 : 0.12) * k;   /* rgbScale: a dimmer part of a light (lit blades); rgbFixed: one set colour instead of the cycle */
-    if (lightHex != null) m.emissive.setHex(lightHex); else if (m.userData.rgbFixed != null) m.emissive.setHex(m.userData.rgbFixed); else if (on && moving) m.emissive.setHSL((now/3500 + i*0.07) % 1, 0.75, 0.55); });
+  /* each light group's colour: a set colour, or the colour cycle ('rainbow', the default for every build but Silas's) */
+  const LC = {}; LIGHT_GROUPS.forEach(([g2]) => { const v = lightOf(sel, g2); LC[g2] = v === 'rainbow' ? null : glowHex(v); });
+  const hexOf = o => LC[(o.userData && o.userData.rgbGrp) || 'case'];
+  const cycle = (c, t, l) => c.setHSL(((moving ? now / 3800 : 0) + t) % 1, 0.75, l);   /* reduced motion: the colours hold still */
+  const glowBase = (m, hex) => { if (m.userData.base == null) m.userData.base = m.color.getHex(); m.color.setHex(lit && hex != null ? 0x121212 : m.userData.base); };   /* a lit diffuser shows its light's colour, not white plus colour */
+  if (scn.strips) scn.strips.children.forEach((o, i) => { const hex = hexOf(o);
+    if (o.userData.glowLight) { o.intensity = lit && hex != null ? 0.9 : 0; if (hex != null) o.color.setHex(hex); }   /* the room glow follows a set colour only */
+    else if (o.userData.halo) { o.material.opacity = lit ? 0.16 : 0; if (hex != null) o.material.color.setHex(hex); else if (lit) cycle(o.material.color, i * 0.13, 0.6); } });
+  animList.rgb.forEach(o => { const hex = hexOf(o); glowBase(o.material, hex); o.material.emissiveIntensity = lit ? (hex != null ? 1 : 1.1) : 0.15;
+    if (hex != null) o.material.emissive.setHex(hex); else if (lit) cycle(o.material.emissive, o.position.x / 200, 0.55); });
+  animList.rgbMats.forEach((m, i) => { const hex = hexOf(m), k = m.userData.rgbScale || 1; if (!m.userData.rgbScale) glowBase(m, hex); m.emissiveIntensity = (lit ? 1.1 : 0.12) * k;   /* rgbScale: a dimmer part of a light (lit blades) */
+    if (hex != null) m.emissive.setHex(hex); else if (lit) cycle(m.emissive, i * 0.07, 0.55); });
   animList.lit.forEach(o => { o.material.emissiveIntensity = lit ? 1 : 0.1; });
   animList.screen.forEach(o => { if (o.material.isMeshBasicMaterial) o.material.color.setScalar(lit ? 1 : 0.3); else o.material.emissiveIntensity = lit ? 1 : 0.25; });
   if (tickScreen(now, powered && moving)) dirty = true;   /* the pump screen's art: plays while the build runs, unless motion is reduced; the power button stops it */

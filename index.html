@@ -134,6 +134,16 @@ h3{font-size:.95rem;margin:0;font-weight:600}
 .camrow .tool{border:1px solid var(--line)}
 /* the default build is Silas's own PC: a line under the build name and a small tag in the view */
 .ownerline{margin:2px 0 0;font-size:.82rem;line-height:1.35;color:var(--muted)}
+.ownerline .linkbtn{font-size:.82rem;min-height:24px}
+/* Extras: LED strips, power cables and one lighting colour (Silas's PC turns them on; every other build starts without them) */
+.extras{margin:4px 10px 0;padding:14px 10px 6px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.extras[hidden]{display:none}
+.extras .switches{margin:0 -8px}
+.exrow{display:flex;flex-direction:column;gap:6px;border:0;margin:0;padding:0;min-width:0}
+.exrow .seg{gap:6px}
+.excolor{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.excolor input[type=color]{width:44px;height:36px;padding:2px;border:1px solid var(--line-strong);border-radius:10px;background:var(--raised);cursor:pointer}
+.excolor .v{font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
 .ownertag{position:absolute;z-index:4;left:calc(var(--inset-l, 0px) + 14px);top:calc(var(--inset-t, 0px) + 10px);margin:0;padding:6px 12px;font-size:.78rem;font-weight:600;color:var(--ink);display:flex;gap:7px;align-items:center;pointer-events:none;max-width:calc(100% - 28px)}
 .ownertag[hidden]{display:none}
 /* phones: centred under the top bar; wider screens: floats just above the case like the part markers and moves with the view */
@@ -788,8 +798,8 @@ details.more[open] summary::after{transform:rotate(-135deg)}
     <div class="sheet-body" id="sheetBody">
       <aside class="panel glass panel-left" id="panelL" aria-labelledby="leftTitle">
         <div id="configLeft">
-          <div class="panel-head"><div class="titles"><p class="eyebrow">Your build</p><h2 id="leftTitle">Parts</h2><p class="ownerline" id="ownerLine" hidden>This is Silas Moore's own PC. Silas made Clearance.</p></div><div class="headbtns"><button type="button" class="collapsebtn sharebtn" id="shareBtn" aria-label="Share this build" title="Share this build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/></svg></button><button type="button" class="collapsebtn" id="collapseL" aria-expanded="true" aria-controls="leftBody" aria-label="Collapse your build"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div><p class="sharemsg" id="shareMsg" role="status" hidden></p></div>
-          <div class="panel-scroll collapsible" id="leftBody"><ul class="catnav" id="catnav"></ul><div class="costbox" id="costbox"></div><div class="meter" id="meter"></div><div class="sobox" id="sobox" hidden></div></div>
+          <div class="panel-head"><div class="titles"><p class="eyebrow">Your build</p><h2 id="leftTitle">Parts</h2><p class="ownerline" id="ownerLine">This is Silas Moore's own PC. Silas made Clearance.</p></div><div class="headbtns"><button type="button" class="collapsebtn sharebtn" id="shareBtn" aria-label="Share this build" title="Share this build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/></svg></button><button type="button" class="collapsebtn" id="collapseL" aria-expanded="true" aria-controls="leftBody" aria-label="Collapse your build"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div><p class="sharemsg" id="shareMsg" role="status" hidden></p></div>
+          <div class="panel-scroll collapsible" id="leftBody"><ul class="catnav" id="catnav"></ul><section class="extras" id="extras" aria-labelledby="exTitle" hidden></section><div class="costbox" id="costbox"></div><div class="meter" id="meter"></div><div class="sobox" id="sobox" hidden></div></div>
         </div>
         <div id="guideLeft" class="guidecol" hidden>
           <div class="guidehead">
@@ -887,12 +897,16 @@ const sel = {
   /* the default build is Silas's own PC */
   case:'corsair-5000d-airflow', finish:'White', board:'msi-mag-b650-tomahawk-wifi', cpu:'ryzen-7-7700x',
   cooler:'nzxt-kraken-360-2023', radPos:'side', radEnd:null, ram:'corsair-vengeance-rgb-ddr5-32gb-6000', gpu:'gigabyte-rtx-4070-windforce-oc',
-  storage:'samsung-970-evo-500gb', psu:'corsair-rm850e-2025', fans:'stock', psuFan:null, pumpDir:'front', hoseDir:'glass', gpuMount:'horizontal', radAt:0, radFans:'nzxt-f120-rgb-core', radFanColor:'White', cables:'white', lights:'#FFA032', strips:true, epsOne:true, usb3:false, drives:['samsung-980-500gb', 'wd-pc-sn520-256gb'],
+  storage:'samsung-970-evo-500gb', psu:'corsair-rm850e-2025', fans:'stock', psuFan:null, pumpDir:'front', hoseDir:'glass', gpuMount:'horizontal', radAt:0, radFans:'nzxt-f120-rgb-core', radFanColor:'White', cables:'white', lights:'#FFA032', strips:true, epsOne:true, usb3:false, ownPlate:true, screenArt:true, drives:['samsung-980-500gb', 'wd-pc-sn520-256gb'],
   none:[]   // parts not picked yet (after Start over): they stay in the scene as placeholders, hidden and left out of every check
 };
 const BUILD_CATS = ['case', 'board', 'cpu', 'cooler', 'ram', 'gpu', 'storage', 'psu'];
 // Silas Moore's own PC (the default): the app names it while every part is still his
 const HOME_PARTS = Object.assign({drives:(sel.drives || []).join()}, ...BUILD_CATS.map(k => ({[k]:sel[k]})));
+/* Silas's own extras: they come with his preset and nobody else's build. Start over turns them all off; swapping his case
+   takes the LED strips out (they were fitted to it); anyone can turn the strips, cables or lighting back on under Extras */
+const PRESET_EXTRAS = {strips:true, cables:'white', lights:'#FFA032', usb3:false, epsOne:true, ownPlate:true, screenArt:true};
+const PLAIN_EXTRAS = {strips:false, cables:'psu', lights:null, usb3:true, epsOne:false, ownPlate:false, screenArt:false};
 const isHomeBuild = s => BUILD_CATS.every(k => isPicked(s, k) && s[k] === HOME_PARTS[k]) && (s.drives || []).join() === HOME_PARTS.drives;
 // case fans belong to the case, so they count as picked once the case is
 const isPicked = (s, k) => !(s.none || []).includes(k === 'fans' ? 'case' : k);
@@ -1810,7 +1824,10 @@ const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 function buildTitle(){ return isPicked(sel, 'case') ? byId.cases[sel.case].name.replace(/\s*\(.*\)/,'') : 'New build'; }
 function renderNav(checks){
   $('#leftTitle').textContent = buildTitle();
-  const home = isHomeBuild(sel); $('#ownerLine').hidden = !home; $('#ownerTag').hidden = !home;
+  const home = isHomeBuild(sel); $('#ownerTag').hidden = !home;
+  $('#ownerLine').innerHTML = home ? "This is Silas Moore's own PC. Silas made Clearance."
+    : `<button type="button" class="linkbtn" data-home="1">Load Silas Moore's PC</button>`;
+  renderExtras();
   $('#catnav').innerHTML = CATS.map(c => {
     if (!isPicked(sel, c.key)) {   /* nothing picked here yet: the row opens the picker */
       const what = c.key === 'fans' ? 'Pick a case first' : 'Not picked yet';
@@ -2404,7 +2421,7 @@ let preview = null;   // {cat, id, saved}: the build as it was before the previe
 function choosePart(cat, id){
   sel[cat] = id; sel.none = (sel.none || []).filter(k => k !== cat);
   if (cat === 'case' && !byId.cases[id].colors.includes(sel.finish)) sel.finish = byId.cases[id].colors[0];
-  if (cat === 'case') { sel.fanCfg = fullFanCfg(id); sel.psuFan = null; }
+  if (cat === 'case') { sel.fanCfg = fullFanCfg(id); sel.psuFan = null; if (id !== HOME_PARTS.case) sel.strips = false; }   /* Silas's strips were fitted to his case */
   if (cat === 'cooler' || cat === 'case') { sel.radPos = null; sel.radEnd = null; }
 }
 function fitFanEverywhere(id){
@@ -2515,7 +2532,7 @@ function startOver(){
   if (soloKey) { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   closePicker(false);
   const s = JSON.parse(JSON.stringify(DEFAULT_SEL));
-  Object.assign(s, {none:BUILD_CATS.slice(), fanCfg:fullFanCfg(s.case), psuFan:null, radPos:null, radEnd:null, radAt:0, pumpDir:null});
+  Object.assign(s, PLAIN_EXTRAS, {none:BUILD_CATS.slice(), fanCfg:fullFanCfg(s.case), psuFan:null, radPos:null, radEnd:null, radAt:0, pumpDir:null});
   Object.keys(sel).forEach(k => delete sel[k]); Object.assign(sel, normalizeEmpty(s));
   rebuildScene(); resetView(); refreshUI();
   announce('Every part removed. Your build is empty. Start with a case.');
@@ -2535,7 +2552,7 @@ $('#sobox') && $('#sobox').addEventListener('click', e => {
 
 /* save and share: the build lives in the page address (#b=...) and in this browser, so a reload or a shared link opens it */
 const DEFAULT_SEL = JSON.parse(JSON.stringify(sel));
-const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'radAt', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'radEnd', 'fanCfg', 'none', 'radFans', 'radFanColor', 'cables', 'lights', 'strips', 'drives', 'epsOne', 'usb3'];
+const SEL_KEYS = ['case', 'finish', 'board', 'cpu', 'cooler', 'radPos', 'radAt', 'ram', 'gpu', 'gpuMount', 'storage', 'psu', 'fans', 'psuFan', 'pumpDir', 'radEnd', 'fanCfg', 'none', 'radFans', 'radFanColor', 'cables', 'lights', 'strips', 'ownPlate', 'screenArt', 'drives', 'epsOne', 'usb3'];
 const b64u = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = t => decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))));
 // only what differs from the starting build goes in the link (the case always does), which keeps links short
@@ -2561,6 +2578,7 @@ function decodeBuild(code){
     if (typeof o.strips === 'boolean') out.strips = o.strips;
     if (typeof o.epsOne === 'boolean') out.epsOne = o.epsOne;
     if (typeof o.usb3 === 'boolean') out.usb3 = o.usb3;
+    ['ownPlate', 'screenArt'].forEach(k => { if (typeof o[k] === 'boolean') out[k] = o[k]; });
     if (Array.isArray(o.drives)) out.drives = o.drives.filter(id => byId.storage[id] && byId.storage[id].type === 'M.2 NVMe').slice(0, 4);
     if (o.lights === null || (typeof o.lights === 'string' && /^#[0-9a-f]{6}$/i.test(o.lights))) out.lights = o.lights;
     if (o.radFans === null) out.radFans = null;
@@ -2594,6 +2612,44 @@ $('#shareBtn') && $('#shareBtn').addEventListener('click', async () => {
   catch (e) { done('Copy this link: ' + url); }
 });
 const _restored = restoreBuild();
+
+/* ---------- Extras: LED strips, power cables, one lighting colour ---------- */
+function renderExtras(){
+  const el = $('#extras'); if (!el) return;
+  el.hidden = !isPicked(sel, 'case'); if (el.hidden) { el.innerHTML = ''; return; }
+  const lt = sel.lights || '#ffa032', own = !sel.lights;
+  el.innerHTML = `<p class="eyebrow" id="exTitle">Extras</p>
+    <ul class="switches"><li><button type="button" role="switch" data-ex="strips" aria-checked="${!!sel.strips}"><span class="txt"><span class="l">LED strips</span>
+      <span class="h">Bare strips along the glass edges, diffused ones round the board and down the back wall</span></span><span class="track" aria-hidden="true"><i></i></span></button></li></ul>
+    <fieldset class="exrow"><legend class="dd-l">Power cables</legend><div class="seg">
+      <label><input type="radio" name="excab" value="psu" ${sel.cables !== 'white' ? 'checked' : ''}>The power supply's own</label>
+      <label><input type="radio" name="excab" value="white" ${sel.cables === 'white' ? 'checked' : ''}>White extensions</label></div></fieldset>
+    <div class="exrow"><label class="dd-l" for="exLight">Lighting colour</label><div class="excolor">
+      <input type="color" id="exLight" value="${esc(lt)}" aria-describedby="exLightV"><span class="v" id="exLightV">${own ? "Each part's own lighting" : esc(sel.lights.toUpperCase())}</span>
+      ${own ? '' : `<button type="button" class="btn small" data-ex="lightsOff">Use each part's own</button>`}</div></div>`;
+}
+function setExtra(k, v, rebuild){
+  sel[k] = v; if (rebuild) rebuildScene(); refreshUI(); invalidate(false);
+}
+$('#extras').addEventListener('click', e => { const b = e.target.closest('[data-ex]'); if (!b) return;
+  if (b.dataset.ex === 'strips') { const on = !sel.strips; setExtra('strips', on, true); announce(on ? 'LED strips on' : 'LED strips off'); const nb = $('#extras [data-ex="strips"]'); if (nb) nb.focus(); }
+  if (b.dataset.ex === 'lightsOff') { setExtra('lights', null, false); announce("Each part uses its own lighting"); const i = $('#exLight'); if (i) i.focus(); } });
+$('#extras').addEventListener('change', e => {
+  if (e.target.name === 'excab') { setExtra('cables', e.target.value, true); announce(e.target.value === 'white' ? 'White cable extensions' : "The power supply's own cables");
+    const r = $(`#extras input[name="excab"][value="${e.target.value}"]`); if (r) r.focus(); }
+  if (e.target.id === 'exLight') { setExtra('lights', e.target.value.toLowerCase(), false); announce('Lighting colour ' + e.target.value.toUpperCase()); const i = $('#exLight'); if (i) i.focus(); } });
+$('#extras').addEventListener('input', e => { if (e.target.id === 'exLight') { sel.lights = e.target.value.toLowerCase(); const v = $('#exLightV'); if (v) v.textContent = sel.lights.toUpperCase(); invalidate(false); } });
+// back to Silas's own PC, extras and all
+function loadHomeBuild(){
+  if (preview) dropPreview();
+  if (soloKey) { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
+  closePicker(false);
+  Object.keys(sel).forEach(k => delete sel[k]); Object.assign(sel, JSON.parse(JSON.stringify(DEFAULT_SEL)));
+  rebuildScene(); resetView(); refreshUI();
+  announce("Silas Moore's PC loaded");
+  const t = $('#leftTitle'); if (t) { t.tabIndex = -1; t.focus(); }
+}
+$('#ownerLine').addEventListener('click', e => { if (e.target.closest('[data-home]')) loadHomeBuild(); });
 
 /* =====================================================================
    3D studio
@@ -5701,7 +5757,7 @@ const CAD_GPU = {'rtx-5080-fe': CAD_FE, 'rtx-5090-fe': CAD_FE, 'rtx-5070-fe': CA
   'rtx-5060-ti-16g-ventus-2x-oc-plus': CAD_VENTUS, 'asus-rog-astral-rtx-5090': CAD_ASTRAL, 'gigabyte-rtx-4070-windforce-oc': CAD_G4070WF};
 const GPU_CAD_DOUBLE = /^(blade|hub|hubring|hubcap|bevel|light|gold|pins|pipe|capcan)$/;   /* numpy-built meshes: mixed winding */
 function buildGPUCad(gp, g, G){
-  const C = CAD_GPU[gp.id], cols = Object.assign({}, C.common, (C.variants || {})[gp.id]);
+  const C = CAD_GPU[gp.id], cols = Object.assign({}, C.common, (C.variants || {})[gp.id], !sel.ownPlate && C.variants && C.variants.stock || {});   /* Silas repainted his card's backplate white; everyone else gets the stock one */
   // the table card becomes the invisible collision proxy; its lights and anchors make way for the CAD ones
   cadProxy(g); g.traverse(o => { if (o.userData.lit) delete o.userData.lit; });
   g.children.filter(o => o.userData.anchor).forEach(o => g.remove(o));
@@ -6081,7 +6137,7 @@ function tickScreen(now, play){   /* true when the picture changed (the caller r
   let t = now % A.total; for (const [k, n] of A.runs) { t -= n * A.ms; if (t < 0) return screenFrame(k); } return false; }
 function pumpLcdMesh(m, size){
   const geo = cadGeo(m); if (m.uv && !geo.attributes.uv) geo.setAttribute('uv', new THREE.Float32BufferAttribute(m.uv, 2));
-  const tex = screenTex(), mat = tex ? new THREE.MeshBasicMaterial({map:tex, color:0xffffff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}) : M(0x07080a, {emissive:0x16243c, emissiveIntensity:0.6, roughness:0.1, metalness:0});
+  const tex = sel.screenArt ? screenTex() : null, mat = tex ? new THREE.MeshBasicMaterial({map:tex, color:0xffffff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}) : M(0x07080a, {emissive:0x16243c, emissiveIntensity:0.6, roughness:0.1, metalness:0});
   mat.polygonOffset = true; mat.polygonOffsetFactor = -2; mat.polygonOffsetUnits = -4;
   const o = cadMesh(m, mat); o.userData.screen = true; o.userData.lcd = true;
   if (size) { if (!geo.boundingBox) geo.computeBoundingBox(); const b = geo.boundingBox, w = b.max.x - b.min.x, s = size / w, c = new THREE.Vector3(); b.getCenter(c);

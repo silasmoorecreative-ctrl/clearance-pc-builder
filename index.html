@@ -2157,7 +2157,8 @@ function placeHotCard(){
 function removePart(cat){
   const label = PART_LABEL(cat);
   if (cat === 'fans') Object.values(sel.fanCfg || {}).forEach(f => { if (!f) return; f.model = 'none'; setSlots(f, (f.slots || []).map(() => false)); });
-  else { const wasHome = isHomeBuild(sel); sel.none = [...new Set((sel.none || []).concat(cat))]; normalizeEmpty(sel); leaveHome(wasHome); }
+  else { const wasHome = isHomeBuild(sel); sel.none = [...new Set((sel.none || []).concat(cat))]; if (cat === 'storage') sel.drives = [];   /* the extra drives go with it */
+    normalizeEmpty(sel); leaveHome(wasHome); }
   if (preview) preview = null;
   closeHotCard(false); if (pickOpen && activeCat === cat) closePicker(false);
   rebuildScene(); refreshUI(); updateSceneDesc();
@@ -2548,7 +2549,7 @@ function startOver(){
   if (soloKey) { soloKey = null; $('#soloBar').hidden = true; syncSoloBtns(); }
   closePicker(false);
   const s = JSON.parse(JSON.stringify(DEFAULT_SEL));
-  Object.assign(s, PLAIN_EXTRAS, {none:BUILD_CATS.slice(), fanCfg:fullFanCfg(s.case), psuFan:null, radPos:null, radEnd:null, radAt:0, pumpDir:null});
+  Object.assign(s, JSON.parse(JSON.stringify(PLAIN_EXTRAS)), {drives:[], none:BUILD_CATS.slice(), fanCfg:fullFanCfg(s.case), psuFan:null, radPos:null, radEnd:null, radAt:0, pumpDir:null});
   Object.keys(sel).forEach(k => delete sel[k]); Object.assign(sel, normalizeEmpty(s));
   rebuildScene(); resetView(); refreshUI();
   announce('Every part removed. Your build is empty. Start with a case.');
@@ -2758,6 +2759,10 @@ const lampSpot = new THREE.SpotLight(0xffbf7a, 0, 3200, 0.9, 0.9, 1);
 const lampGlow = new THREE.PointLight(0xff9d52, 0, 5200, 1);
 const ceilLight = new THREE.PointLight(0xffe4c4, 0, 6400, 1);
 const bedLamp = new THREE.PointLight(0xffc68a, 0, 2800, 1);
+/* RGB light that lands on the parts round it: one soft point light per cluster of lit parts (a fan column, the RAM, a strip),
+   in that cluster's colour while the build runs. Always EMIT_N of them, dark when off, so turning them on never recompiles shaders */
+const EMIT_N = 8, emitLights = [];
+for (let i = 0; i < EMIT_N; i++) { const pl = new THREE.PointLight(0xffffff, 0, 300, 2); pl.userData.emit = null; scene.add(pl); emitLights.push(pl); }
 scene.add(lampSpot, lampSpot.target, lampGlow, ceilLight, bedLamp);
 // One layout, two palettes. Millimetres; the case stands at the origin, glass side facing +z.
 const ROOM = {x0:-2700, x1:2000, y0:-760, y1:1940, z0:-320, z1:4500};
@@ -7371,6 +7376,7 @@ function rebuildScene(){
   rig.updateMatrixWorld(true);
   applyHighlights();
   applyVisibility(true);
+  placeEmitLights();
   buildAir(); setAirVisible();
   if (mode === 'guide') { steps = buildSteps(); stepIdx = Math.min(stepIdx, steps.length-1); guideStart(steps[stepIdx], false); renderGuide(); }
   updateOverlays();
@@ -7471,10 +7477,36 @@ function setXray(caseOn, shroudOn){
 function m2Slots(F){ return ((F.geo && F.geo.m2) || []).filter(m => m.side === 'front' && m.card && m !== F.m2slot); }
 function m2Extras(F){
   const slots = m2Slots(F), out = [];
+  if (!isPicked(sel, 'storage') || !isPicked(sel, 'board')) return out;   /* no drives without a drive picked, or a board to hold them */
   (sel.drives || []).forEach((id, i) => { const st = byId.storage[id], m = slots[i]; if (!st || !m || st.type !== 'M.2 NVMe') return;
     const atLow = Math.abs(m.card[0] - m.conn[0]) < Math.abs(m.card[1] - m.conn[1]);
     out.push([st, Object.assign({}, F, {m2slot:m, m2: atLow ? [m.card[0], m.card[1], m.conn[2], m.conn[3]] : [m.card[1], m.card[0], m.conn[2], m.conn[3]]})]); });
   return out;
+}
+
+/* where the RGB light comes from: the centres of the lit parts (long ones, like strips, give a point every ~140 mm along their length),
+   gathered into up to EMIT_N clusters (k-means), each lit in its parts' group colour */
+function placeEmitLights(){
+  rig.updateMatrixWorld(true);
+  const pts = [], bb = new THREE.Box3(), c = new THREE.Vector3(), sz = new THREE.Vector3();
+  const add = (o, grp) => { if (!isShown(o)) return; bb.setFromObject(o); if (bb.isEmpty()) return; bb.getCenter(c); bb.getSize(sz);
+    const ax = sz.x >= sz.y && sz.x >= sz.z ? 'x' : sz.y >= sz.z ? 'y' : 'z', len = sz[ax], n = Math.max(1, Math.min(5, Math.round(len / 140)));
+    for (let i = 0; i < n; i++) { const p = c.clone(); p[ax] = bb.min[ax] + len * (i + 0.5) / n; pts.push({p, grp}); } };
+  rig.traverse(o => { if (o.userData.rgbMats && o.userData.rgbMats.length) add(o, o.userData.rgbMats[0].userData.rgbGrp || 'case');
+    else if (o.userData.rgb && o.isMesh) add(o, o.userData.rgbGrp || 'case'); });
+  emitLights.forEach(l => { l.userData.emit = null; l.intensity = 0; });
+  if (!pts.length) return;
+  const k = Math.min(EMIT_N, pts.length), cen = [pts[0].p.clone()];
+  while (cen.length < k) { let best = null, bd = -1; pts.forEach(q => { const d = Math.min(...cen.map(m => m.distanceToSquared(q.p))); if (d > bd) { bd = d; best = q; } }); cen.push(best.p.clone()); }
+  let lab = [];
+  for (let it = 0; it < 8; it++) {
+    lab = pts.map(q => { let bi = 0, bd = Infinity; cen.forEach((m, i) => { const d = m.distanceToSquared(q.p); if (d < bd) { bd = d; bi = i; } }); return bi; });
+    cen.forEach((m, i) => { const mine = pts.filter((q, j) => lab[j] === i); if (mine.length) m.set(0, 0, 0), mine.forEach(q => m.add(q.p)), m.divideScalar(mine.length); });
+  }
+  cen.forEach((m, i) => { const mine = pts.filter((q, j) => lab[j] === i); if (!mine.length) return;
+    const tally = {}; mine.forEach(q => { tally[q.grp] = (tally[q.grp] || 0) + 1; });
+    const grp = Object.keys(tally).sort((a, b) => tally[b] - tally[a])[0], l = emitLights[i];
+    l.position.copy(m); l.position.z = Math.min(l.position.z + 22, L.W / 2 - 14);   /* just in front of the lit faces, toward the glass, so it washes over them instead of sitting inside them */ l.userData.emit = {grp, n:mine.length}; });
 }
 
 /* ---------- clash detection: do any two parts occupy the same space in the built scene? ----------
@@ -9304,10 +9336,6 @@ function wireSpecFor(kind, psuId, ends, opt){
    Drawn only (no collisions); their light follows the Lighting colour like every other RGB part. */
 function buildStrips(c, L, F){
   const g = new THREE.Group();
-  /* the glow inside the case: a few soft lights in the lit parts' colour, so white panels pick up the light as in photos
-     (always there, dark until the build runs, so turning them on never recompiles the materials) */
-  [[L.D * 0.25, L.H * 0.55, L.W * 0.45], [L.D * 0.55, L.H - 60, L.W * 0.5], [L.D * 0.6, L.H * 0.62, L.tray + 40], [L.D - 40, L.H * 0.5, L.W * 0.4]].forEach(p => {
-    const pl = new THREE.PointLight(0xffd9ad, 0, 420, 2); pl.position.set(...p); pl.userData.glowLight = true; pl.userData.rgbGrp = 'strips'; g.add(pl); });
   if (!sel.strips || !isHomeBuild(sel)) return reg('strips', g, 'case');   /* Silas's own strips: only on his PC */
   const zg = L.W - L.t - 9, x0 = (L.geo.glass ? L.geo.glass.x0 : 30) + 12, x1 = L.D - 14;
   const tape = M(0xf2f3f1, {roughness:0.6, emissive:0xffa032, emissiveIntensity:0.15}), ledM = M(0xfff6e8, {roughness:0.3, emissive:0xffa032, emissiveIntensity:0.15});
@@ -9643,7 +9671,12 @@ function tick(){
   /* each light group's colour: a set colour, or the colour cycle ('rainbow', the default for every build but Silas's) */
   const LC = {}; LIGHT_GROUPS.forEach(([g2]) => { const v = lightOf(sel, g2); LC[g2] = v === 'rainbow' ? null : glowHex(v); });
   const hexOf = o => LC[(o.userData && o.userData.rgbGrp) || 'case'];
-  const cycle = (c, t, l) => c.setHSL(((moving ? now / 3800 : 0) + t) % 1, 0.75, l);   /* reduced motion: the colours hold still */
+  const hue = moving ? (now / 14000) % 1 : 0;   /* Rainbow: every part in step, sliding smoothly round the colour wheel (reduced motion: holds still) */
+  const cycle = (c, t, l) => c.setHSL(hue, 0.85, l);
+  /* the RGB light falling on the parts round each lit cluster, in that cluster's colour */
+  emitLights.forEach(pl => { const E = pl.userData.emit; if (!E || !lit) { pl.intensity = 0; return; }
+    const v = lightOf(sel, E.grp); if (v === 'rainbow') pl.color.setHSL(hue, 0.9, 0.55); else pl.color.set(v);
+    pl.intensity = Math.min(1.9, 0.7 + 0.13 * E.n); pl.distance = 380; });
   const glowBase = (m, hex) => { if (m.userData.base == null) m.userData.base = m.color.getHex(); m.color.setHex(lit && hex != null ? 0x121212 : m.userData.base); };   /* a lit diffuser shows its light's colour, not white plus colour */
   if (scn.strips) scn.strips.children.forEach((o, i) => { const hex = hexOf(o);
     if (o.userData.glowLight) { o.intensity = lit && hex != null ? 0.9 : 0; if (hex != null) o.color.setHex(hex); }   /* the room glow follows a set colour only */

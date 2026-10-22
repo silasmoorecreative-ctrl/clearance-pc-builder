@@ -2650,7 +2650,7 @@ function lightRow(name, label, value, follow){
   const shown = mode === 'all' ? follow : value, sw = shown === 'rainbow' ? RAINBOW_SW : shown;
   return `<div class="exlight"><span class="exsw" style="background:${sw}" aria-hidden="true"></span>
     ${ddHTML({name:'exl-' + name, label, value:mode, options:opts, small:true})}
-    ${mode === 'custom' ? `<input type="color" class="excol" data-lg="${name}" value="${esc(hex)}" aria-label="${esc(label)} color">` : ''}</div>`;
+    ${mode === 'custom' ? `<input type="color" class="excol" data-lg="${name}" value="${esc(hexOfColor(hex) || '#ffffff')}" aria-label="${esc(label)} color">` : ''}</div>`;
 }
 function renderExtras(){
   const el = $('#extras'); if (!el) return;
@@ -2667,11 +2667,23 @@ DD_ON['exl-'] = (v, _, d) => { const g = d.dataset.dd.slice(4);
   else { sel.lightsBy = Object.assign({}, sel.lightsBy); if (v === 'all') delete sel.lightsBy[g]; else sel.lightsBy[g] = v === 'custom' ? (/^#/.test(sel.lightsBy[g] || '') ? sel.lightsBy[g] : (/^#/.test(sel.lights || '') ? sel.lights : '#ffffff')) : 'rainbow'; }
   refreshUI(); invalidate(false);
   const c = $(`#extras .excol[data-lg="${g}"]`); if (c && v === 'custom') c.focus(); };
+/* a color input's value as #rrggbb. Newer Safari can hand back a wide-gamut color (color(display-p3 ...)) instead of hex:
+   stored as is, it put the input back to black (#000000 is what a color input shows for a value it can't read) and the 3D
+   scene couldn't read it either. Any CSS color goes through a 1-pixel canvas; anything unreadable is dropped (null). */
+let _hexCv = null;
+function hexOfColor(v){
+  v = String(v || '').trim(); if (/^#[0-9a-f]{6}$/i.test(v)) return v.toLowerCase();
+  try { if (!_hexCv) { _hexCv = document.createElement('canvas'); _hexCv.width = _hexCv.height = 1; }
+    const x = _hexCv.getContext('2d', {willReadFrequently:true}); x.clearRect(0, 0, 1, 1); x.fillStyle = '#010203'; x.fillStyle = v;
+    if (x.fillStyle === '#010203' && !/^#010203$/i.test(v)) return null;   // not a color the browser reads
+    x.fillRect(0, 0, 1, 1); const d = x.getImageData(0, 0, 1, 1).data;
+    return '#' + [d[0], d[1], d[2]].map(n => n.toString(16).padStart(2, '0')).join(''); } catch (e) { return null; }
+}
 const setLight = (g, hex) => { if (g === 'all') sel.lights = hex; else sel.lightsBy = Object.assign({}, sel.lightsBy, {[g]:hex}); };
-$('#extras').addEventListener('input', e => { const c = e.target.closest('.excol'); if (!c) return; setLight(c.dataset.lg, c.value.toLowerCase());
-  const sw = c.parentElement.querySelector('.exsw'); if (sw) sw.style.background = c.value; invalidate(false); });
-$('#extras').addEventListener('change', e => { const c = e.target.closest('.excol'); if (!c) return; const g = c.dataset.lg; setLight(g, c.value.toLowerCase()); refreshUI(); invalidate(false);
-  announce('Lighting color ' + c.value.toUpperCase()); const n = $(`#extras .excol[data-lg="${g}"]`); if (n) n.focus(); });
+$('#extras').addEventListener('input', e => { const c = e.target.closest('.excol'); if (!c) return; const hex = hexOfColor(c.value); if (!hex) return; setLight(c.dataset.lg, hex);
+  const sw = c.parentElement.querySelector('.exsw'); if (sw) sw.style.background = hex; invalidate(false); });
+$('#extras').addEventListener('change', e => { const c = e.target.closest('.excol'); if (!c) return; const g = c.dataset.lg, hex = hexOfColor(c.value); if (!hex) return; setLight(g, hex); refreshUI(); invalidate(false);
+  announce('Lighting color ' + hex.toUpperCase()); const n = $(`#extras .excol[data-lg="${g}"]`); if (n) n.focus(); });
 // back to Silas's own PC, extras and all
 function loadHomeBuild(){
   if (preview) dropPreview();
